@@ -174,6 +174,8 @@ th {
 .search-box {
     position: relative;
     margin-left: auto;
+    display: flex;
+    align-items: center;
 }
 
 .search-box input {
@@ -195,132 +197,223 @@ th {
 
 .search-box i {
     position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 12px;
     color: #6b7280;
-    transition: color 0.3s ease;
-}
-
-.search-box input:focus + i {
-    color: #3b82f6;
+    pointer-events: none;
 }
 
 /* Modal Styles */
 .modal {
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
     z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    overflow-y: auto;
 }
 
 .modal.show {
-    opacity: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    width: 95%;
+    max-width: 500px;
+    margin: 1.75rem auto;
+    position: relative;
 }
 
 .modal-content {
-    background: white;
-    margin: 5% auto;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    max-width: 500px;
     position: relative;
-    transform: translateY(-50px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-                0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.modal.show .modal-content {
-    transform: translateY(0);
-    opacity: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
 }
 
 .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 1;
+    padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .modal-header h3 {
     margin: 0;
     font-size: 1.25rem;
+    font-weight: 600;
     color: #1f2937;
 }
 
-.close {
-    font-size: 1.5rem;
-    cursor: pointer;
+.modal-close {
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
     color: #6b7280;
-    transition: color 0.2s ease;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: all 0.15s ease-in-out;
 }
 
-.close:hover {
+.modal-close:hover {
     color: #ef4444;
     background-color: #fee2e2;
 }
 
-/* Form trong Modal */
-.modal form {
-    margin-top: 1rem;
+.modal-body {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
 }
 
-.modal .form-group {
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #f8fafc;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.modal-footer .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.modal-footer .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.modal-footer .btn-primary {
+    background: linear-gradient(135deg, #044e8a, #0022fe);
+    color: white;
+    border: none;
+}
+
+.modal-footer .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Form styles trong modal */
+.modal-body .form-group {
+    margin-bottom: 1rem;
+}
+
+.modal-body .form-group:last-child {
     margin-bottom: 1.5rem;
 }
 
-.modal .form-group label {
+.modal-body .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
     color: #374151;
 }
 
-.modal .form-group input,
-.modal .form-group select {
+.modal-body .form-group input,
+.modal-body .form-group select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
 }
 
-.modal .form-group input:focus,
-.modal .form-group select:focus {
+.modal-body .form-group input:focus,
+.modal-body .form-group select:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.modal .btn-primary {
-    width: 100%;
-    padding: 0.75rem;
-    margin-top: 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
+/* Responsive styles cho modal */
+@media (max-width: 640px) {
+    .modal-dialog {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+    
+    .modal-content {
+        max-height: calc(100vh - 2rem);
+    }
+    
+    .modal-body {
+        max-height: calc(100vh - 180px);
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+    }
 }
 
-.modal .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+/* Animation */
+@keyframes modalShow {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal.show .modal-content {
+    animation: modalShow 0.2s ease-out forwards;
 }
 
 /* Stats Cards */

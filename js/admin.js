@@ -675,31 +675,60 @@ class AdminDashboard {
     async loadAssignments() {
         try {
             const response = await fetch('https://localhost:7231/RealAdmins/GetAllAssignments');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
             const data = await response.json();
             const assignments = data.data || [];
 
+            // Lấy thông tin giáo viên
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
+            const teachersData = await teachersResponse.json();
+            const teachers = teachersData.data || [];
+
+            // Lấy thông tin môn học
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
+            const subjectsData = await subjectsResponse.json();
+            const subjects = subjectsData.data || [];
+
+            // Lấy thông tin lớp học
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
             const tbody = document.querySelector('#assignmentTable tbody');
-            tbody.innerHTML = assignments.map(assignment => `
-                <tr>
-                    <td>${assignment.teacherName}</td>
-                    <td>${assignment.subjectName}</td>
-                    <td>${assignment.cohortName}</td>
-                    <td>${assignment.timeSlot}</td>
-                    <td>
-                        <span class="status-badge ${assignment.status.toLowerCase()}">
-                            ${this.getStatusText(assignment.status)}
-                        </span>
-                    </td>
-                    <td>
-                        <button onclick="adminDashboard.openAssignmentModal('${assignment.assignmentId}')" class="btn-edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="adminDashboard.deleteAssignment('${assignment.assignmentId}')" class="btn-delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            if (!tbody) {
+                console.error('Không tìm thấy bảng phân công!');
+                return;
+            }
+
+            tbody.innerHTML = assignments.map(assignment => {
+                const teacher = teachers.find(t => t.teacherId === assignment.teacherId);
+                const subject = subjects.find(s => s.subjectId === assignment.subjectId);
+                const cohort = cohorts.find(c => c.cohortId === assignment.cohortId);
+
+                return `
+                    <tr>
+                        <td>${teacher ? `${teacher.firstName} ${teacher.lastName}` : 'N/A'}</td>
+                        <td>${subject ? subject.subjectName : 'N/A'}</td>
+                        <td>${cohort ? cohort.cohortName : 'N/A'}</td>
+                        <td>${assignment.timeSlot || 'N/A'}</td>
+                        <td>
+                            <span class="status-badge ${assignment.status.toLowerCase()}">
+                                ${this.getStatusText(assignment.status)}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="adminDashboard.openAssignmentModal('${assignment.assignmentId}')" class="btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="adminDashboard.deleteAssignment('${assignment.assignmentId}')" class="btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         } catch (error) {
             console.error("Lỗi khi tải danh sách phân công:", error);
         }

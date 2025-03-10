@@ -32,55 +32,52 @@
 
     <!-- Modal thêm/sửa phân công -->
     <div id="assignmentModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Thông tin phân công giảng dạy</h3>
-                <span class="close" onclick="adminDashboard.closeModal('assignmentModal')">&times;</span>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Thông tin phân công</h3>
+                    <button type="button" class="modal-close" onclick="adminDashboard.closeModal('assignmentModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="assignmentForm">
+                        <input type="hidden" name="assignmentId">
+                        <div class="form-group">
+                            <label>Giáo viên</label>
+                            <select name="teacherId" required>
+                                <!-- Options sẽ được thêm động từ JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Môn học</label>
+                            <select name="subjectId" required>
+                                <!-- Options sẽ được thêm động từ JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Lớp</label>
+                            <select name="cohortId" required>
+                                <!-- Options sẽ được thêm động từ JS -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Thời gian</label>
+                            <input type="text" name="timeSlot" required placeholder="VD: Thứ 2 (Tiết 1-3)">
+                        </div>
+                        <div class="form-group">
+                            <label>Trạng thái</label>
+                            <select name="status" required>
+                                <option value="active">Đang hoạt động</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="completed">Đã hoàn thành</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal('assignmentModal')">Hủy</button>
+                    <button type="submit" form="assignmentForm" class="btn btn-primary">Lưu</button>
+                </div>
             </div>
-            <form id="assignmentForm">
-                <input type="hidden" name="assignmentId">
-                
-                <div class="form-group">
-                    <label>Giáo viên</label>
-                    <select name="teacherId" required>
-                        <!-- Options sẽ được thêm từ JS -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Môn học</label>
-                    <select name="subjectId" required>
-                        <!-- Options sẽ được thêm từ JS -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Lớp</label>
-                    <select name="cohortId" required>
-                        <!-- Options sẽ được thêm từ JS -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Thời gian dạy</label>
-                    <select name="timeSlot" required>
-                        <option value="Sáng">Buổi sáng</option>
-                        <option value="Chiều">Buổi chiều</option>
-                        <option value="Tối">Buổi tối</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Trạng thái</label>
-                    <select name="status" required>
-                        <option value="active">Đang hoạt động</option>
-                        <option value="pending">Chờ xử lý</option>
-                        <option value="completed">Đã hoàn thành</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-primary">Lưu</button>
-            </form>
         </div>
     </div>
 </div> 
