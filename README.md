@@ -9,5 +9,5 @@ Chào mừng bạn đến với **LMS (Hệ thống Quản lý Học tập)**! D
 2. Mở dự án bằng live server.
 
 ## Note 
-- Đây chỉ là một bản folk cũ từ project trước đó, chưa có giao diện và UI chính xác
+- Đây chỉ là một bản folk cũ từ project trước đó, chưa có giao diện và UI chính xác tuy nhiên lại có đủ API và back-end để hoạt động một số chức năng cơ bản
 
