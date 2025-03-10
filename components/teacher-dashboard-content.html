@@ -1,0 +1,60 @@
+<link rel="stylesheet" href="css/teacher-dashboard.css">
+<body>
+    <div class="dashboard-content">
+        <div class="welcome-section">
+            <h2><span id="teacherNameWelcome"></span></h2>
+            <p class="date-time" id="currentDateTime"></p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Tổng số học sinh</h3>
+                    <p id="totalStudents">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Điểm trung bình</h3>
+                    <p id="averageScore">0.0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Tỷ lệ đạt</h3>
+                    <p id="passRate">0%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card schedule-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Lịch dạy hôm nay</h3>
+                </div>
+                <div class="schedule-list" id="todaySchedule">
+                    <!-- Lịch dạy sẽ được thêm bằng JavaScript -->
+                </div>
+            </div>
+
+            <div class="card recent-scores">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Điểm số gần đây</h3>
+                </div>
+                <div class="recent-scores-list" id="recentScores">
+                    <!-- Điểm số gần đây sẽ được thêm bằng JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,55 @@
+<div class="cohort-management">
+    <div class="actions-bar">
+        <button id="addCohortBtn" class="btn-primary">
+            <i class="fas fa-plus"></i> Thêm lớp học
+        </button>
+        <div class="search-box">
+            <input type="text" id="searchCohort" placeholder="Tìm kiếm lớp học...">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-school"></i> Danh sách lớp học</h3>
+        </div>
+        <div class="table-container">
+            <table id="cohortTable">
+                <thead>
+                    <tr>
+                        
+                        <th>Tên lớp</th>
+                        <th>Description</th>
+                        <th>Tổng học sinh</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal thêm/sửa lớp học -->
+    <div id="cohortModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thông tin lớp học</h3>
+                <span class="close" onclick="adminDashboard.closeModal('cohortModal')">&times;</span>
+            </div>
+            <form id="cohortForm">
+                <input type="hidden" name="cohortId">
+          
+                <div class="form-group">
+                    <label>Tên lớp</label>
+                    <input type="text" name="cohortName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="description" required>
+                </div>
+                <button type="submit" class="btn-primary">Lưu</button>
+            </form>
+        </div>
+    </div>
+</div> 

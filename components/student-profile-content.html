@@ -1,0 +1,138 @@
+<link rel="stylesheet" href="css/student-dashboard.css">
+<link rel="stylesheet" href="css/student-profile.css">
+<script src="js/student-profile.js"></script>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h2 id="studentFullName"></h2>
+            <p id="studentId"></p>
+            <div class="profile-status">
+                <span class="status-badge active">
+                    <i class="fas fa-check-circle">Đang học</i>
+                </span>
+            </div>
+        </div>
+        
+        <div class="profile-info">
+            <div class="info-section">
+                <h3><i class="fas fa-info-circle"></i> Thông tin cơ bản</h3>
+                <div class="info-grid">
+                    <div class="info-group">
+                        <label>Họ :</label>
+                        <span id="studentLastNameInfo"></span>
+                    </div>
+                    <div class="info-group">
+                        <label>Tên:</label>
+                        <span id="studentFirstNameInfo"></span>
+                    </div>
+                    
+                    
+                    <div class="info-group">
+                        
+                        <label>Lớp:</label>
+                        <span id="studentClass"></span>
+                    </div>
+                    
+                   
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-address-card"></i> Thông tin liên hệ</h3>
+                <div class="info-grid">
+                    <div class="info-group">
+                        <label>Email:</label>
+                        <span id="studentEmail"></span>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+
+            
+
+            <div class="info-section">
+                <h3><i class="fas fa-graduation-cap"></i> Thông tin học tập</h3>
+                <div class="academic-info">
+                    <div class="semester-grades">
+                        <h3>Điểm số </h3>
+                        <div class="grades-grid">
+                            
+                            <div class="grade-card">
+                                <h4>GPA</h4>
+                                <div class="grade-value" id="gpaYear">0.0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rankings">
+                        <div class="ranking-card">
+                            <h4>Xếp loại học lực</h4>
+                            <div class="ranking-value" id="academicRank">-</div>
+                        </div>
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            
+            <button class="btn btn-primary" onclick="studentProfile.changePassword()">
+                <i class="fas fa-key"></i> Đổi mật khẩu
+            </button>
+            <button class="btn btn-info" onclick="studentProfile.printProfile()">
+                <i class="fas fa-print"></i> In hồ sơ
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal Change Password -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Đổi mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" class="form-control" id="currentPassword">
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" id="newPassword">
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-control" id="confirmPassword">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="studentProfile.savePassword()">Lưu thay đổi</button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<!-- Print Template -->
+<div id="printTemplate" style="display: none;">
+    <div class="print-profile">
+        <div class="school-info text-center">
+            
+        </div>
+    </div>
+</div> 

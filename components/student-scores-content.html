@@ -1,0 +1,71 @@
+<link rel="stylesheet" href="css/student-dashboard.css">
+<link rel="stylesheet" href="css/student-scores.css">
+<div class="scores-container">
+    <div class="filters-section">
+        <div class="filter-group">
+            <select id="subjectFilter" class="form-select">
+                <option value="">Tất cả môn học</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <select id="scoreFilter" class="form-select">
+                <option value="">Tất cả điểm số</option>
+                <option value="high">Điểm cao (>= 8)</option>
+                <option value="medium">Điểm trung bình (4-8)</option>
+                <option value="low">Điểm thấp (<= 4)</option>
+            </select>
+        </div>
+        
+    </div>
+
+    <div class="scores-summary">
+        <div class="summary-card">
+            <h3>Điểm trung bình</h3>
+            <div class="summary-value" id="averageGrade">0.0</div>
+        </div>
+        <div class="summary-card">
+            <h3>Xếp loại</h3>
+            <div class="summary-value" id="academicRanking">-</div>
+        </div>
+        <div class="summary-card">
+            <h3>Số môn đạt</h3>
+            <div class="summary-value" id="passedSubjects">0</div>
+        </div>
+    </div>
+
+    <div class="scores-statistics">
+        <div class="stat-item">
+            <h3>Tổng số điểm</h3>
+            <div class="stat-value" id="totalScores">0</div>
+        </div>
+        <div class="stat-item">
+            <h3>Điểm cao nhất</h3>
+            <div class="stat-value" id="highestScore">0.0</div>
+        </div>
+        <div class="stat-item">
+            <h3>Điểm thấp nhất</h3>
+            <div class="stat-value" id="lowestScore">0.0</div>
+        </div>
+        <div class="stat-item">
+            <h3>Tỷ lệ đạt</h3>
+            <div class="stat-value" id="passRate">0%</div>
+        </div>
+    </div>
+
+    <div class="scores-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Môn học</th>
+                    
+                    <th>Loại điểm</th>
+                    <th>Điểm số</th>
+                    <th>Ngày Chấm</th>
+                   
+                </tr>
+            </thead>
+            <tbody id="scoresTableBody">
+            </tbody>
+        </table>
+    </div>
+</div> 
