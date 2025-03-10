@@ -23,7 +23,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, var(--primary-color), #7B68EE);
+    background: linear-gradient(135deg, #0c0024, #270867, #451a91, #270867, #0c0024);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -60,7 +62,7 @@ body::before {
     max-width: 450px;
     padding: 20px;
     position: relative;
-    z-index: 10;
+    z-index: 2;
     animation: fadeIn 0.5s ease-in-out;
 }
 
@@ -252,54 +254,101 @@ body::before {
     font-size: 14px;
 }
 
-/* Login Button */
+/* Login Button với hiệu ứng mới */
 button[type="submit"] {
     width: 100%;
     padding: 14px;
-    background: var(--primary-color);
+    background: linear-gradient(
+        90deg,
+        #ff00de,
+        #6C5CE7,
+        #00ff88,
+        #6C5CE7,
+        #ff00de
+    );
+    background-size: 300% 100%;
     color: white;
     border: none;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-top: 10px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    transition: all 0.3s ease;
+    animation: gradientMove 12s linear infinite;
+    box-shadow: 
+        0 0 5px rgba(108, 92, 231, 0.5),
+        0 0 10px rgba(108, 92, 231, 0.3),
+        0 0 15px rgba(108, 92, 231, 0.1),
+        inset 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 button[type="submit"]:hover {
-    background: var(--primary-dark);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.5);
+    transform: translateY(-2px);
+    animation: gradientMove 8s linear infinite;
+    box-shadow: 
+        0 0 10px rgba(108, 92, 231, 0.6),
+        0 0 20px rgba(108, 92, 231, 0.4),
+        0 0 30px rgba(108, 92, 231, 0.2),
+        inset 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 button[type="submit"]:active {
     transform: translateY(1px);
-    box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
 }
 
-button[type="submit"]::after {
+button[type="submit"]::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: 0.5s;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 10px;
+    background: linear-gradient(
+        45deg,
+        #ff00de,
+        #6C5CE7,
+        #00ff88,
+        #6C5CE7,
+        #ff00de
+    );
+    background-size: 300% 100%;
+    z-index: -1;
+    animation: gradientMove 12s linear infinite;
+    filter: blur(8px);
+    opacity: 0.7;
 }
 
-button[type="submit"]:hover::after {
-    left: 100%;
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 150% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
+/* Hiệu ứng cho icon trong button */
 button[type="submit"] i {
     margin-right: 8px;
+    animation: iconGlow 2s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(255, 255, 255, 1);
+    }
 }
 
 /* Loading spinner */
@@ -689,4 +738,128 @@ select option {
 
 .login-box {
     animation: glowAnimation 5s infinite ease-in-out;
+}
+
+/* Floating Particles */
+.particle {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    animation: particleFloat 10s infinite ease-in-out;
+}
+
+.particle:nth-child(1) { top: 10%; left: 10%; width: 80px; height: 80px; animation-delay: 0s; }
+.particle:nth-child(2) { top: 20%; right: 15%; width: 60px; height: 60px; animation-delay: 2s; }
+.particle:nth-child(3) { bottom: 15%; left: 20%; width: 70px; height: 70px; animation-delay: 4s; }
+.particle:nth-child(4) { bottom: 25%; right: 25%; width: 50px; height: 50px; animation-delay: 6s; }
+.particle:nth-child(5) { top: 50%; left: 30%; width: 65px; height: 65px; animation-delay: 8s; }
+
+/* Glowing Lines */
+.glow-line {
+    position: fixed;
+    width: 2px;
+    height: 100px;
+    background: linear-gradient(180deg, transparent, #ff00de, transparent);
+    animation: glowLineFloat 8s infinite ease-in-out;
+}
+
+.glow-line:nth-child(1) { left: 10%; animation-delay: 0s; }
+.glow-line:nth-child(2) { left: 25%; animation-delay: 2s; height: 150px; }
+.glow-line:nth-child(3) { right: 15%; animation-delay: 4s; }
+.glow-line:nth-child(4) { right: 30%; animation-delay: 6s; height: 120px; }
+
+/* Floating Shapes */
+.floating-shape {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    animation: shapeFloat 20s infinite linear;
+    opacity: 0.3;
+}
+
+.floating-shape:nth-child(1) {
+    top: 15%;
+    left: 15%;
+    transform: rotate(45deg);
+    border-color: rgba(255, 0, 222, 0.2);
+}
+
+.floating-shape:nth-child(2) {
+    top: 75%;
+    right: 10%;
+    width: 150px;
+    height: 150px;
+    border-color: rgba(108, 92, 231, 0.2);
+    animation-delay: 5s;
+}
+
+.floating-shape:nth-child(3) {
+    bottom: 20%;
+    left: 20%;
+    width: 80px;
+    height: 80px;
+    border-color: rgba(0, 255, 136, 0.2);
+    animation-delay: 10s;
+}
+
+/* Star Field */
+.star {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: starTwinkle 2s infinite ease-in-out;
+}
+
+.star:nth-child(1) { top: 10%; left: 20%; }
+.star:nth-child(2) { top: 30%; right: 25%; animation-delay: 0.5s; }
+.star:nth-child(3) { bottom: 40%; left: 40%; animation-delay: 1s; }
+.star:nth-child(4) { bottom: 20%; right: 30%; animation-delay: 1.5s; }
+.star:nth-child(5) { top: 50%; left: 50%; animation-delay: 0.7s; }
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes particleFloat {
+    0% { transform: translateY(0) scale(1); opacity: 0; }
+    50% { transform: translateY(-100px) scale(1.2); opacity: 0.5; }
+    100% { transform: translateY(-200px) scale(1); opacity: 0; }
+}
+
+@keyframes glowLineFloat {
+    0% { transform: translateY(100vh); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+@keyframes shapeFloat {
+    0% { transform: rotate(0deg) translateY(0); }
+    50% { transform: rotate(180deg) translateY(-20px); }
+    100% { transform: rotate(360deg) translateY(0); }
+}
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* Thêm overlay cho hiệu ứng depth */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+    z-index: 1;
 } 
