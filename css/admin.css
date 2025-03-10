@@ -197,7 +197,7 @@ th {
 
 .search-box i {
     position: absolute;
-    right: 12px;
+    left: 272px;
     color: #6b7280;
     pointer-events: none;
 }
