@@ -57,11 +57,148 @@ class AdminDashboard {
     }
 
     async initializeDashboard() {
-        // Display system stats
+        // Hiển thị thống kê hệ thống
         const stats = await this.getSystemStats();
         document.getElementById('totalStudents').textContent = stats.students;
         document.getElementById('totalTeachers').textContent = stats.teachers;
         document.getElementById('totalCohorts').textContent = stats.cohorts;
+
+        // Khởi tạo biểu đồ phân bố học sinh
+        await this.initializeStudentDistributionChart();
+
+        // Cập nhật hoạt động gần đây
+        await this.updateRecentActivities();
+
+        // Cập nhật thống kê nhanh
+        await this.updateQuickStats();
+    }
+
+    async initializeStudentDistributionChart() {
+        try {
+            // Lấy dữ liệu lớp học và số lượng học sinh
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
+            // Lấy số lượng học sinh cho mỗi lớp
+            const studentCounts = await Promise.all(cohorts.map(async (cohort) => {
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const data = await response.json();
+                return data[0]?.numOfStudents || 0;
+            }));
+
+            // Chuẩn bị dữ liệu cho biểu đồ
+            const ctx = document.getElementById('studentDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: cohorts.map(cohort => cohort.cohortName),
+                    datasets: [{
+                        data: studentCounts,
+                        backgroundColor: [
+                            '#4B91F1',
+                            '#FF6B6B',
+                            '#4ECDC4',
+                            '#45B7D1',
+                            '#96CEB4',
+                            '#FFEEAD'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Lỗi khi tạo biểu đồ:", error);
+        }
+    }
+
+    async updateRecentActivities() {
+        const activitiesList = document.getElementById('recentActivities');
+        if (!activitiesList) return;
+
+        // Mô phỏng các hoạt động gần đây (trong thực tế sẽ lấy từ API)
+        const activities = [
+            {
+                type: 'add',
+                icon: 'fas fa-plus',
+                text: 'Thêm học sinh mới vào lớp 12A1',
+                time: '5 phút trước'
+            },
+            {
+                type: 'edit',
+                icon: 'fas fa-edit',
+                text: 'Cập nhật thông tin giáo viên Nguyễn Văn A',
+                time: '15 phút trước'
+            },
+            {
+                type: 'delete',
+                icon: 'fas fa-trash',
+                text: 'Xóa lớp học 11B2',
+                time: '1 giờ trước'
+            }
+        ];
+
+        activitiesList.innerHTML = activities.map(activity => `
+            <div class="activity-item">
+                <div class="activity-icon ${activity.type}">
+                    <i class="${activity.icon}"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">${activity.text}</div>
+                    <div class="activity-time">${activity.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async updateQuickStats() {
+        try {
+            // Lấy tất cả học sinh
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
+            const studentsData = await studentsResponse.json();
+            const students = studentsData.data || [];
+
+            // Tính tỷ lệ nam/nữ
+            const maleStudents = students.filter(s => s.gender === 'Male').length;
+            const femaleStudents = students.filter(s => s.gender === 'Female').length;
+            const malePercent = Math.round((maleStudents / students.length) * 100);
+            const femalePercent = Math.round((femaleStudents / students.length) * 100);
+            document.getElementById('genderRatio').textContent = `${malePercent}% / ${femalePercent}%`;
+
+            // Lấy thông tin về lớp học
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
+            // Lấy số lượng học sinh cho mỗi lớp
+            const cohortStats = await Promise.all(cohorts.map(async (cohort) => {
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const data = await response.json();
+                return {
+                    name: cohort.cohortName,
+                    count: data[0]?.numOfStudents || 0
+                };
+            }));
+
+            // Tìm lớp đông nhất và ít nhất
+            const sortedCohorts = cohortStats.sort((a, b) => b.count - a.count);
+            const largest = sortedCohorts[0];
+            const smallest = sortedCohorts[sortedCohorts.length - 1];
+
+            document.getElementById('largestClass').textContent = `${largest.name} (${largest.count} học sinh)`;
+            document.getElementById('smallestClass').textContent = `${smallest.name} (${smallest.count} học sinh)`;
+
+        } catch (error) {
+            console.error("Lỗi khi cập nhật thống kê nhanh:", error);
+        }
     }
 
     async initializeStudentManagement() {
