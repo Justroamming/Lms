@@ -63,7 +63,7 @@ class TeacherProfile  {
                                 </div>
 
                                 <div class="info-group">
-                                    <label>Address: </label>
+                                    <label>Địa chỉ: </label>
                                     <span id="teacherAddress">${this.teacher.address}</span>
                                 </div>
 
