@@ -28,7 +28,9 @@
                 <li data-page="cohorts">
                     <i class="fas fa-school"></i> Quản lý lớp học
                 </li>
-                
+                <li data-page="assignments">
+                    <i class="fas fa-tasks"></i> Phân công giảng dạy
+                </li>
             </ul>
         </div>
         <div class="main-content">
@@ -53,6 +55,8 @@
             if (!user || user.role !== 'admin') {
                 window.location.href = 'login.html';
             }
+            // Khởi tạo sự kiện đóng modal khi click ra ngoài
+            adminDashboard.setupModalOutsideClick();
         });
     </script>
 </body>
