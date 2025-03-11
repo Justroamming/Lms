@@ -6,57 +6,128 @@
     <title>Đăng nhập - Hệ thống quản lý điểm</title>
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ghi đè các hiệu ứng để tối ưu hiệu suất */
+        body {
+            background: linear-gradient(135deg, #0c0024, #270867);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Thêm một số hiệu ứng nhẹ nhàng cho background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 10px, transparent 200px),
+                radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.03) 10px, transparent 200px);
+            z-index: -1;
+        }
+        
+        /* Thêm một số điểm sáng tĩnh */
+        .light-dots {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .light-dot {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+        
+        /* Đơn giản hóa login box nhưng vẫn giữ một số hiệu ứng nhẹ */
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .login-box:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Thêm đường viền nhẹ nhàng */
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
+        }
+        
+        /* Ẩn tất cả các phần tử trang trí nặng */
+        .background-decorations,
+        .particle,
+        .glow-line,
+        .floating-shape,
+        .star,
+        .decorative-shape,
+        .education-icon {
+            display: none !important;
+        }
+        
+        /* Tối ưu hiệu ứng focus */
+        .form-group input:focus,
+        .form-group select:focus {
+            box-shadow: 0 2px 5px rgba(108, 92, 231, 0.15);
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        /* Hiệu ứng nhẹ cho nút đăng nhập */
+        #loginButton {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #loginButton:hover {
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+    </style>
 </head>
 <body>
-    <!-- Background Decorations -->
-    <div class="background-decorations">
-        <!-- Particles -->
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-
-        <!-- Glowing Lines -->
-        <div class="glow-line"></div>
-        <div class="glow-line"></div>
-        <div class="glow-line"></div>
-        <div class="glow-line"></div>
-
-        <!-- Floating Shapes -->
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
-
-        <!-- Stars -->
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-        <div class="star"></div>
-    </div>
-    
-    <!-- Particles background -->
-    <div id="particles"></div>
-    
-    <!-- Decorative Elements -->
-    <div class="decorative-shape shape-1"></div>
-    <div class="decorative-shape shape-2"></div>
-    <div class="decorative-shape shape-3"></div>
-    <div class="decorative-shape shape-4"></div>
-    
-    <!-- Education Icons -->
-    <div class="education-icon icon-1">
-        <i class="fas fa-book"></i>
-    </div>
-    <div class="education-icon icon-2">
-        <i class="fas fa-graduation-cap"></i>
-    </div>
-    <div class="education-icon icon-3">
-        <i class="fas fa-pencil-alt"></i>
-    </div>
-    <div class="education-icon icon-4">
-        <i class="fas fa-calculator"></i>
+    <!-- Thêm điểm sáng tĩnh -->
+    <div class="light-dots">
+        <div class="light-dot" style="top: 10%; left: 20%"></div>
+        <div class="light-dot" style="top: 15%; left: 80%"></div>
+        <div class="light-dot" style="top: 25%; left: 40%"></div>
+        <div class="light-dot" style="top: 35%; left: 70%"></div>
+        <div class="light-dot" style="top: 45%; left: 15%"></div>
+        <div class="light-dot" style="top: 55%; left: 60%"></div>
+        <div class="light-dot" style="top: 65%; left: 30%"></div>
+        <div class="light-dot" style="top: 75%; left: 85%"></div>
+        <div class="light-dot" style="top: 85%; left: 45%"></div>
+        <div class="light-dot" style="top: 90%; left: 10%"></div>
     </div>
     
     <!-- Notifications outside of form container -->
@@ -103,7 +174,7 @@
                         <input type="checkbox" id="rememberMe" class="toggle-input">
                         <label for="rememberMe" class="toggle-label">
                             <span class="toggle-inner"></span>
-                            <span class="toggle-switch-text">Nhớ tôi</span>
+                            <span class="toggle-switch-text">Ghi nhớ đăng nhập</span>
                         </label>
                     </div>
                 </div>
