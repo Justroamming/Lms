@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="dashboard">
@@ -27,7 +28,9 @@
                 <li data-page="cohorts">
                     <i class="fas fa-school"></i> Quản lý lớp học
                 </li>
-                
+                <li data-page="assignments">
+                    <i class="fas fa-tasks"></i> Phân công giảng dạy
+                </li>
             </ul>
         </div>
         <div class="main-content">
@@ -52,6 +55,8 @@
             if (!user || user.role !== 'admin') {
                 window.location.href = 'login.html';
             }
+            // Khởi tạo sự kiện đóng modal khi click ra ngoài
+            adminDashboard.setupModalOutsideClick();
         });
     </script>
 </body>

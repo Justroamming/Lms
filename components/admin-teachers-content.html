@@ -36,61 +36,64 @@
 
     <!-- Modal thêm/sửa giáo viên -->
     <div id="teacherModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Thông tin giáo viên</h3>
-                <span class="close" onclick="adminDashboard.closeModal('teacherModal')">&times;</span>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Thông tin giáo viên</h3>
+                    <button type="button" class="modal-close" onclick="adminDashboard.closeModal('teacherModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="teacherForm">
+                        <input type="hidden" id="teacherId" name="teacherId">
+                        <div class="form-group">
+                            <label>Họ</label>
+                            <input type="text" name="lastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tên</label>
+                            <input type="text" name="firstName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Giới tính</label>
+                            <select name="gender" required>
+                                <option value="Male">Nam</option>
+                                <option value="Female">Nữ</option>
+                                <option value="Other">Khác</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Địa chỉ</label>
+                            <input type="text" name="address" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ngày sinh</label>
+                            <input type="date" name="dob" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>SĐT</label>
+                            <input type="number" name="phone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Mật khẩu</label>
+                            <input type="password" name="password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="adminDashboard.closeModal('teacherModal')">Hủy</button>
+                    <button type="submit" form="teacherForm" class="btn btn-primary">Lưu</button>
+                </div>
             </div>
-            <form id="teacherForm">
-                <input type="hidden" id="teacherId" name="teacherId">
-
-                <div class="form-group">
-                    <label>Họ</label>
-                    <input type="text" name="lastName" required>
-                </div>
-                <div class="form-group">
-                    <label>tên</label>
-                    <input type="text" name="firstName" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Giới tính</label>
-                    <select name="gender" required>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Địa chỉ</label>
-                    <input type="text" name="address" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Ngày sinh</label>
-                    <input type="date" name="dob" required>
-                </div>
-
-                <div class="form-group">
-                    <label>SĐT</label>
-                    <input type="number" name="phone" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>password</label>
-                    <input type="password" name="password" required>
-                </div>
-                
-               
-                
-                <button type="submit" class="btn-primary">Lưu</button>
-            </form>
         </div>
     </div>
 </div> 

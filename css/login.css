@@ -1,191 +1,471 @@
 /* Reset và biến màu */
 :root {
-    --primary-color: #2563eb;
-    --primary-dark: #1d4ed8;
+    --primary-color: #6C5CE7;
+    --primary-light: #8A7EEA;
+    --primary-dark: #5541E0;
     --secondary-color: #64748b;
     --success-color: #22c55e;
     --error-color: #ef4444;
-    --background-gradient: linear-gradient(135deg, #0078ff, #00c6ff)
-    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --text-color: #1f2937;
+    --light-text-color: #6b7280;
+    --input-border: #E5E7EB;
+    --input-bg: #FFFFFF;
+    --page-bg: #6C5CE7;
+    --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --input-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #0078ff, #00c6ff);
-    height: 100vh;
+    background: linear-gradient(135deg, #0c0024, #270867, #451a91, #270867, #0c0024);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-/* Login page layout */
-.login-page {
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    background: var(--background-gradient);
+    padding: 20px;
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Role Selection Styles */
-.role-selection {
+/* Thêm hiệu ứng nền đẹp */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    max-width: 1200px;
-    text-align: center;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05) 10px, transparent 300px),
+        radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.05) 10px, transparent 300px),
+        radial-gradient(circle at 40% 50%, rgba(255, 255, 255, 0.05) 10px, transparent 200px);
+    z-index: -2;
 }
 
-.school-logo {
-    margin-bottom: 3rem;
-    color: white;
-}
-
-.school-logo img {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 1rem;
-}
-
-.school-logo h1 {
-    font-size: 2.5rem;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.role-cards {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 1rem;
-}
-
-.role-card {
-    background: white;
-    border-radius: 1rem;
-    padding: 2.5rem;
-    width: 350px;
-    text-align: center;
-    transition: all 0.3s ease;
-    box-shadow: var(--box-shadow);
-}
-
-.role-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.role-icon {
-    font-size: 4rem;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-}
-
-.role-card h2 {
-    font-size: 1.8rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-}
-
-.role-card p {
-    color: var(--secondary-color);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
+#particles {
+    display: none;
 }
 
 /* Login Form Styles */
 .login-container {
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     padding: 20px;
+    position: relative;
+    z-index: 2;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .login-box {
     background: white;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    transform: perspective(1000px) rotateY(0deg);
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    backface-visibility: hidden;
+    animation: glowAnimation 5s infinite ease-in-out;
+}
+
+.login-box:hover {
+    transform: perspective(1000px) rotateY(2deg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Hiệu ứng đường viền cho form */
+.login-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
 }
 
 .login-header h2 {
-    color: #1e3c72;
-    font-size: 28px;
+    color: var(--primary-color);
+    font-size: 32px;
     margin-bottom: 10px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: titleBounce 0.8s ease-out;
 }
 
 .login-header p {
-    color: #666;
-    font-size: 16px;
+    color: var(--light-text-color);
+    font-size: 19px;
+    position: relative;
+    display: inline-block;
 }
 
+.login-header p::after {
+    content: '';
+    position: absolute;
+    width: 50px;
+    height: 2px;
+    background: var(--primary-color);
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+/* Form Group Styles */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    position: relative;
 }
 
 .form-group label {
-    display: block;
+    display: flex;
+    align-items: center;
     margin-bottom: 8px;
-    color: #333;
+    padding-left: 0;
+    color: var(--primary-color);
     font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: var(--primary-color);
+    margin-right: 8px;
+    font-size: 14px;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    padding: 12px 16px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
     font-size: 16px;
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    padding-left: 15px;
+    padding-right: 15px;
+    box-shadow: var(--input-shadow);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: #1e3c72;
+    border-color: var(--primary-color);
     outline: none;
+    box-shadow: 0 8px 15px rgba(108, 92, 231, 0.15);
+    transform: translateY(-2px);
+    transition: transform 0.3s ease;
 }
 
+.form-group i.fas {
+    display: none;
+}
+
+/* Password visibility toggle - Fix icon display issue */
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    padding-right: 45px !important;
+    width: 100%;
+}
+
+/* Toggle Switch for Remember Me */
+.remember-me-container {
+    margin-bottom: 24px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.toggle-input {
+    height: 0;
+    width: 0;
+    visibility: hidden;
+    position: absolute;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.toggle-inner {
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 20px;
+    border-radius: 24px;
+    background-color: #E5E7EB;
+    margin-right: 8px;
+    transition: all 0.3s ease;
+}
+
+.toggle-inner:before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label .toggle-inner {
+    background-color: var(--primary-color);
+}
+
+.toggle-input:checked + .toggle-label .toggle-inner:before {
+    transform: translateX(20px);
+}
+
+.toggle-switch-text {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* Login Button với hiệu ứng mới */
 button[type="submit"] {
     width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #0078ff, #00c6ff);
+    padding: 14px;
+    background: linear-gradient(
+        90deg,
+        #ff00de,
+        #6C5CE7,
+        #00ff88,
+        #6C5CE7,
+        #ff00de
+    );
+    background-size: 300% 100%;
     color: white;
     border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: 500;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: gradientMove 12s linear infinite;
+    box-shadow: 
+        0 0 5px rgba(108, 92, 231, 0.5),
+        0 0 10px rgba(108, 92, 231, 0.3),
+        0 0 15px rgba(108, 92, 231, 0.1),
+        inset 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 button[type="submit"]:hover {
-    background: linear-gradient(135deg, #00eeff, #0ccf57);
+    transform: translateY(-2px);
+    animation: gradientMove 8s linear infinite;
+    box-shadow: 
+        0 0 10px rgba(108, 92, 231, 0.6),
+        0 0 20px rgba(108, 92, 231, 0.4),
+        0 0 30px rgba(108, 92, 231, 0.2),
+        inset 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
-/* Icon styles */
-.fas {
+button[type="submit"]:active {
+    transform: translateY(1px);
+}
+
+button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 10px;
+    background: linear-gradient(
+        45deg,
+        #ff00de,
+        #6C5CE7,
+        #00ff88,
+        #6C5CE7,
+        #ff00de
+    );
+    background-size: 300% 100%;
+    z-index: -1;
+    animation: gradientMove 12s linear infinite;
+    filter: blur(8px);
+    opacity: 0.7;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 150% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Hiệu ứng cho icon trong button */
+button[type="submit"] i {
     margin-right: 8px;
+    animation: iconGlow 2s ease-in-out infinite;
 }
 
-/* Responsive design */
+@keyframes iconGlow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(255, 255, 255, 1);
+    }
+}
+
+/* Loading spinner */
+.spinner {
+    display: none;
+}
+
+button[type="submit"].loading .button-text {
+    opacity: 0;
+    visibility: hidden;
+}
+
+button[type="submit"].loading .spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Select styling */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236C5CE7' width='18px' height='18px'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px !important;
+    color: #1f2937;
+}
+
+select option {
+    color: #1f2937;
+}
+
+/* Notification Messages - Kiểu Popup */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 400px;
+    opacity: 0;
+    z-index: 1000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.notification.show {
+    animation: slideInDown 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+.error-message {
+    background-color: #ef4444;
+}
+
+.success-message {
+    background-color: #22c55e;
+}
+
+.notification i:first-child {
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.notification span {
+    flex: 1;
+    font-weight: 500;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+/* Fix the form height to avoid jarring transitions */
+#loginForm {
+    min-height: 340px;
+}
+
+/* Responsive */
 @media (max-width: 480px) {
     .login-container {
         padding: 10px;
     }
 
     .login-box {
-        padding: 20px;
+        padding: 30px 20px;
     }
 
     .login-header h2 {
@@ -193,83 +473,393 @@ button[type="submit"]:hover {
     }
 }
 
-/* Animation */
-@keyframes fadeIn {
+/* Điều chỉnh màu chữ trong input */
+.form-group input::placeholder {
+    color: #9CA3AF;
+}
+
+/* Đảm bảo animation cho notifications */
+@keyframes slideInDown {
     from {
+        transform: translateX(-50%) translateY(-100px);
         opacity: 0;
-        transform: translateY(-20px);
     }
     to {
+        transform: translateX(-50%) translateY(0);
         opacity: 1;
-        transform: translateY(0);
+    }
+}
+
+/* Hiệu ứng đẹp cho toàn màn hình */
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+.login-container {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Fix icon con mắt */
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-password:hover {
+    background-color: rgba(108, 92, 231, 0.1);
+}
+
+.toggle-password i {
+    font-size: 16px;
+    color: var(--primary-color);
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.toggle-password:hover i {
+    transform: scale(1.1);
+}
+
+/* Notifications */
+.notification.show {
+    animation: slideInDown 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+/* Hiệu ứng nổi bật cho ô input khi hover */
+.form-group input:hover:not(:focus),
+.form-group select:hover:not(:focus) {
+    border-color: #a5b4fc;
+}
+
+/* Hiệu ứng bounce cho tiêu đề khi load trang */
+@keyframes titleBounce {
+    0% { transform: translateY(-10px); opacity: 0; }
+    50% { transform: translateY(5px); opacity: 0.8; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.login-header h2 {
+    animation: titleBounce 0.8s ease-out;
+}
+
+/* Thêm hiệu ứng hình học trang trí */
+.decorative-shape {
+    position: fixed;
+    z-index: -1;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.shape-1 {
+    top: 50px;
+    left: 50px;
+    width: 150px;
+    height: 150px;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    background: linear-gradient(45deg, rgba(108, 92, 231, 0.3), rgba(113, 128, 250, 0.3));
+    animation: morphShape 10s linear infinite, floatShape 8s ease-in-out infinite;
+}
+
+.shape-2 {
+    bottom: 80px;
+    right: 60px;
+    width: 180px;
+    height: 180px;
+    border-radius: 30% 70% 37% 63% / 54% 38% 62% 46%;
+    background: linear-gradient(45deg, rgba(154, 135, 255, 0.3), rgba(102, 126, 234, 0.3));
+    animation: morphShape 15s linear infinite reverse, floatShape 10s ease-in-out infinite;
+}
+
+.shape-3 {
+    bottom: 200px;
+    left: 10%;
+    width: 100px;
+    height: 100px;
+    border-radius: 58% 42% 45% 55% / 61% 39% 61% 39%;
+    background: linear-gradient(45deg, rgba(162, 155, 254, 0.3), rgba(108, 92, 231, 0.3));
+    animation: morphShape 20s linear infinite, floatShape 12s ease-in-out infinite;
+}
+
+.shape-4 {
+    top: 150px;
+    right: 15%;
+    width: 120px;
+    height: 120px;
+    border-radius: 53% 47% 32% 68% / 25% 46% 54% 75%;
+    background: linear-gradient(45deg, rgba(124, 58, 237, 0.3), rgba(162, 155, 254, 0.3));
+    animation: morphShape 18s linear infinite reverse, floatShape 15s ease-in-out infinite;
+}
+
+@keyframes morphShape {
+    0% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+    25% {
+        border-radius: 53% 47% 32% 68% / 25% 46% 54% 75%;
+    }
+    50% {
+        border-radius: 58% 42% 45% 55% / 61% 39% 61% 39%;
+    }
+    75% {
+        border-radius: 30% 70% 37% 63% / 54% 38% 62% 46%;
+    }
+    100% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+}
+
+@keyframes floatShape {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+        transform: translate(10px, -20px) rotate(5deg);
+    }
+    66% {
+        transform: translate(-15px, 10px) rotate(-5deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+/* Thêm hiệu ứng ánh sáng */
+.login-container::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.8;
+    animation: pulseLight 5s infinite ease-in-out;
+}
+
+@keyframes pulseLight {
+    0% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Thêm đường nét trang trí cho login-box */
+.login-box::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    right: -20px;
+    top: -20px;
+    z-index: -1;
+}
+
+/* Thêm trang trí họa tiết giáo dục */
+.education-icon {
+    position: fixed;
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.icon-1 {
+    top: 10%;
+    left: 5%;
+    font-size: 24px;
+    animation: float 20s infinite ease-in-out;
+}
+
+.icon-2 {
+    top: 15%;
+    right: 8%;
+    font-size: 28px;
+    animation: float 18s infinite ease-in-out;
+    animation-delay: 2s;
+}
+
+.icon-3 {
+    bottom: 12%;
+    left: 10%;
+    font-size: 22px;
+    animation: float 15s infinite ease-in-out;
+    animation-delay: 5s;
+}
+
+.icon-4 {
+    bottom: 18%;
+    right: 12%;
+    font-size: 26px;
+    animation: float 22s infinite ease-in-out;
+    animation-delay: 3s;
+}
+
+/* Thêm hiệu ứng nhấp nháy cho form */
+@keyframes glowAnimation {
+    0% {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 20px rgba(108, 92, 231, 0.2);
+    }
+    100% {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     }
 }
 
 .login-box {
-    animation: fadeIn 0.5s ease-out;
+    animation: glowAnimation 5s infinite ease-in-out;
 }
 
-/* Footer Styles */
-.login-footer {
-    text-align: center;
-    margin-top: 1.5rem;
+/* Floating Particles */
+.particle {
+    position: fixed;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    animation: particleFloat 10s infinite ease-in-out;
 }
 
-.login-footer a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+.particle:nth-child(1) { top: 10%; left: 10%; width: 80px; height: 80px; animation-delay: 0s; }
+.particle:nth-child(2) { top: 20%; right: 15%; width: 60px; height: 60px; animation-delay: 2s; }
+.particle:nth-child(3) { bottom: 15%; left: 20%; width: 70px; height: 70px; animation-delay: 4s; }
+.particle:nth-child(4) { bottom: 25%; right: 25%; width: 50px; height: 50px; animation-delay: 6s; }
+.particle:nth-child(5) { top: 50%; left: 30%; width: 65px; height: 65px; animation-delay: 8s; }
+
+/* Glowing Lines */
+.glow-line {
+    position: fixed;
+    width: 2px;
+    height: 100px;
+    background: linear-gradient(180deg, transparent, #ff00de, transparent);
+    animation: glowLineFloat 8s infinite ease-in-out;
 }
 
-.login-footer a:hover {
-    text-decoration: underline;
+.glow-line:nth-child(1) { left: 10%; animation-delay: 0s; }
+.glow-line:nth-child(2) { left: 25%; animation-delay: 2s; height: 150px; }
+.glow-line:nth-child(3) { right: 15%; animation-delay: 4s; }
+.glow-line:nth-child(4) { right: 30%; animation-delay: 6s; height: 120px; }
+
+/* Floating Shapes */
+.floating-shape {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    animation: shapeFloat 20s infinite linear;
+    opacity: 0.3;
 }
 
-/* Error Message */
-.error-message {
-    background-color: var(--error-color);
-    color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-    display: none;
-    animation: slideIn 0.3s ease;
+.floating-shape:nth-child(1) {
+    top: 15%;
+    left: 15%;
+    transform: rotate(45deg);
+    border-color: rgba(255, 0, 222, 0.2);
 }
 
-.error-message.show {
-    display: block;
+.floating-shape:nth-child(2) {
+    top: 75%;
+    right: 10%;
+    width: 150px;
+    height: 150px;
+    border-color: rgba(108, 92, 231, 0.2);
+    animation-delay: 5s;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.floating-shape:nth-child(3) {
+    bottom: 20%;
+    left: 20%;
+    width: 80px;
+    height: 80px;
+    border-color: rgba(0, 255, 136, 0.2);
+    animation-delay: 10s;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .school-logo h1 {
-        font-size: 2rem;
-    }
+/* Star Field */
+.star {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: starTwinkle 2s infinite ease-in-out;
+}
 
-    .role-card {
-        width: 100%;
-        max-width: 400px;
-    }
+.star:nth-child(1) { top: 10%; left: 20%; }
+.star:nth-child(2) { top: 30%; right: 25%; animation-delay: 0.5s; }
+.star:nth-child(3) { bottom: 40%; left: 40%; animation-delay: 1s; }
+.star:nth-child(4) { bottom: 20%; right: 30%; animation-delay: 1.5s; }
+.star:nth-child(5) { top: 50%; left: 50%; animation-delay: 0.7s; }
 
-    .login-box {
-        padding: 2rem;
-    }
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
-    .login-header h2 {
-        font-size: 1.75rem;
-    }
+@keyframes particleFloat {
+    0% { transform: translateY(0) scale(1); opacity: 0; }
+    50% { transform: translateY(-100px) scale(1.2); opacity: 0.5; }
+    100% { transform: translateY(-200px) scale(1); opacity: 0; }
+}
+
+@keyframes glowLineFloat {
+    0% { transform: translateY(100vh); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+@keyframes shapeFloat {
+    0% { transform: rotate(0deg) translateY(0); }
+    50% { transform: rotate(180deg) translateY(-20px); }
+    100% { transform: rotate(360deg) translateY(0); }
+}
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* Thêm overlay cho hiệu ứng depth */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
+    z-index: 1;
 } 

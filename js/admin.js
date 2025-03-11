@@ -3,6 +3,8 @@ class AdminDashboard {
         this.currentPage = 'dashboard';
         this.pageContent = document.getElementById('pageContent');
         this.initializeNavigation();
+        // Tự động tải trang tổng quan khi khởi tạo
+        this.loadPage('dashboard');
     }
 
     initializeNavigation() {
@@ -52,16 +54,155 @@ class AdminDashboard {
             case 'cohorts':
                 this.initializeCohortManagement();
                 break;
-            
+            case 'assignments':
+                this.initializeAssignmentManagement();
+                break;
         }
     }
 
     async initializeDashboard() {
-        // Display system stats
+        // Hiển thị thống kê hệ thống
         const stats = await this.getSystemStats();
         document.getElementById('totalStudents').textContent = stats.students;
         document.getElementById('totalTeachers').textContent = stats.teachers;
         document.getElementById('totalCohorts').textContent = stats.cohorts;
+
+        // Khởi tạo biểu đồ phân bố học sinh
+        await this.initializeStudentDistributionChart();
+
+        // Cập nhật hoạt động gần đây
+        await this.updateRecentActivities();
+
+        // Cập nhật thống kê nhanh
+        await this.updateQuickStats();
+    }
+
+    async initializeStudentDistributionChart() {
+        try {
+            // Lấy dữ liệu lớp học và số lượng học sinh
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
+            // Lấy số lượng học sinh cho mỗi lớp
+            const studentCounts = await Promise.all(cohorts.map(async (cohort) => {
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const data = await response.json();
+                return data[0]?.numOfStudents || 0;
+            }));
+
+            // Chuẩn bị dữ liệu cho biểu đồ
+            const ctx = document.getElementById('studentDistributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: cohorts.map(cohort => cohort.cohortName),
+                    datasets: [{
+                        data: studentCounts,
+                        backgroundColor: [
+                            '#4B91F1',
+                            '#FF6B6B',
+                            '#4ECDC4',
+                            '#45B7D1',
+                            '#96CEB4',
+                            '#FFEEAD'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Lỗi khi tạo biểu đồ:", error);
+        }
+    }
+
+    async updateRecentActivities() {
+        const activitiesList = document.getElementById('recentActivities');
+        if (!activitiesList) return;
+
+        // Mô phỏng các hoạt động gần đây (trong thực tế sẽ lấy từ API)
+        const activities = [
+            {
+                type: 'add',
+                icon: 'fas fa-plus',
+                text: 'Thêm học sinh mới vào lớp 12A1',
+                time: '5 phút trước'
+            },
+            {
+                type: 'edit',
+                icon: 'fas fa-edit',
+                text: 'Cập nhật thông tin giáo viên Nguyễn Văn A',
+                time: '15 phút trước'
+            },
+            {
+                type: 'delete',
+                icon: 'fas fa-trash',
+                text: 'Xóa lớp học 11B2',
+                time: '1 giờ trước'
+            }
+        ];
+
+        activitiesList.innerHTML = activities.map(activity => `
+            <div class="activity-item">
+                <div class="activity-icon ${activity.type}">
+                    <i class="${activity.icon}"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-text">${activity.text}</div>
+                    <div class="activity-time">${activity.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async updateQuickStats() {
+        try {
+            // Lấy tất cả học sinh
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
+            const studentsData = await studentsResponse.json();
+            const students = studentsData.data || [];
+
+            // Tính tỷ lệ nam/nữ
+            const maleStudents = students.filter(s => s.gender === 'Male').length;
+            const femaleStudents = students.filter(s => s.gender === 'Female').length;
+            const malePercent = Math.round((maleStudents / students.length) * 100);
+            const femalePercent = Math.round((femaleStudents / students.length) * 100);
+            document.getElementById('genderRatio').textContent = `${malePercent}% / ${femalePercent}%`;
+
+            // Lấy thông tin về lớp học
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
+            // Lấy số lượng học sinh cho mỗi lớp
+            const cohortStats = await Promise.all(cohorts.map(async (cohort) => {
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const data = await response.json();
+                return {
+                    name: cohort.cohortName,
+                    count: data[0]?.numOfStudents || 0
+                };
+            }));
+
+            // Tìm lớp đông nhất và ít nhất
+            const sortedCohorts = cohortStats.sort((a, b) => b.count - a.count);
+            const largest = sortedCohorts[0];
+            const smallest = sortedCohorts[sortedCohorts.length - 1];
+
+            document.getElementById('largestClass').textContent = `${largest.name} (${largest.count} học sinh)`;
+            document.getElementById('smallestClass').textContent = `${smallest.name} (${smallest.count} học sinh)`;
+
+        } catch (error) {
+            console.error("Lỗi khi cập nhật thống kê nhanh:", error);
+        }
     }
 
     async initializeStudentManagement() {
@@ -152,8 +293,6 @@ class AdminDashboard {
         const modal = document.getElementById('studentModal');
         const form = document.getElementById('studentForm');
     
-   
-    
         if (studentId) {
             const response = await fetch(`https://localhost:7231/RealAdmins/GetStudentById?id=${studentId}`);
             const student = await response.json();
@@ -162,14 +301,12 @@ class AdminDashboard {
                 const input = form.querySelector(`[name="${key}"]`);
                 if (input) input.value = student[key];
             });
-    
-            
             form.querySelector("#studentId").value = studentId;
-        }else{
+        } else {
             form.reset();
         }
     
-        modal.style.display = 'block';
+        this.openModal('studentModal');
     }
     
 
@@ -306,7 +443,7 @@ class AdminDashboard {
     async openTeacherModal(teacherId) {
         const modal = document.getElementById('teacherModal');
         const form = document.getElementById('teacherForm');
-    
+        
         form.reset(); 
     
         if (teacherId) {
@@ -317,12 +454,10 @@ class AdminDashboard {
                 const input = form.querySelector(`[name="${key}"]`);
                 if (input) input.value = teacher[key];
             });
-    
-            // Đặt ID vào input ẩn để xác định là cập nhật
             form.querySelector("#teacherId").value = teacherId;
         }
     
-        modal.style.display = 'block';
+        this.openModal('teacherModal');
     }
     
 
@@ -556,14 +691,12 @@ class AdminDashboard {
                 const input = form.querySelector(`[name="${key}"]`);
                 if (input) input.value = cohortData[key];
             });
-    
-            // Ensure classId is set in the hidden input field
             form.querySelector('[name="cohortId"]').value = cohortId;
         } else {
             form.reset();
         }
         
-        modal.style.display = 'block';
+        this.openModal('cohortModal');
     }
     
     async saveCohort() {
@@ -608,6 +741,216 @@ class AdminDashboard {
     
 
 
+
+    async initializeAssignmentManagement() {
+        await this.loadAssignments();
+        this.setupAssignmentEventListeners();
+        await this.loadAssignmentFormData();
+    }
+
+    async loadAssignments() {
+        try {
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllAssignments');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const assignments = data.data || [];
+
+            // Lấy thông tin giáo viên
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
+            const teachersData = await teachersResponse.json();
+            const teachers = teachersData.data || [];
+
+            // Lấy thông tin môn học
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
+            const subjectsData = await subjectsResponse.json();
+            const subjects = subjectsData.data || [];
+
+            // Lấy thông tin lớp học
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+
+            const tbody = document.querySelector('#assignmentTable tbody');
+            if (!tbody) {
+                console.error('Không tìm thấy bảng phân công!');
+                return;
+            }
+
+            tbody.innerHTML = assignments.map(assignment => {
+                const teacher = teachers.find(t => t.teacherId === assignment.teacherId);
+                const subject = subjects.find(s => s.subjectId === assignment.subjectId);
+                const cohort = cohorts.find(c => c.cohortId === assignment.cohortId);
+
+                return `
+                    <tr>
+                        <td>${teacher ? `${teacher.firstName} ${teacher.lastName}` : 'N/A'}</td>
+                        <td>${subject ? subject.subjectName : 'N/A'}</td>
+                        <td>${cohort ? cohort.cohortName : 'N/A'}</td>
+                        <td>${assignment.timeSlot || 'N/A'}</td>
+                        <td>
+                            <span class="status-badge ${assignment.status.toLowerCase()}">
+                                ${this.getStatusText(assignment.status)}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="adminDashboard.openAssignmentModal('${assignment.assignmentId}')" class="btn-edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="adminDashboard.deleteAssignment('${assignment.assignmentId}')" class="btn-delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách phân công:", error);
+        }
+    }
+
+    getStatusText(status) {
+        const statusMap = {
+            'active': 'Đang hoạt động',
+            'pending': 'Chờ xử lý',
+            'completed': 'Đã hoàn thành'
+        };
+        return statusMap[status] || status;
+    }
+
+    async loadAssignmentFormData() {
+        try {
+            // Load danh sách giáo viên
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
+            const teachersData = await teachersResponse.json();
+            const teachers = teachersData.data || [];
+            
+            const teacherSelect = document.querySelector('select[name="teacherId"]');
+            teacherSelect.innerHTML = teachers.map(teacher => 
+                `<option value="${teacher.teacherId}">${teacher.firstName} ${teacher.lastName}</option>`
+            ).join('');
+
+            // Load danh sách môn học
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
+            const subjectsData = await subjectsResponse.json();
+            const subjects = subjectsData.data || [];
+            
+            const subjectSelect = document.querySelector('select[name="subjectId"]');
+            subjectSelect.innerHTML = subjects.map(subject => 
+                `<option value="${subject.subjectId}">${subject.subjectName}</option>`
+            ).join('');
+
+            // Load danh sách lớp học
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
+            const cohortsData = await cohortsResponse.json();
+            const cohorts = cohortsData.data || [];
+            
+            const cohortSelect = document.querySelector('select[name="cohortId"]');
+            cohortSelect.innerHTML = cohorts.map(cohort => 
+                `<option value="${cohort.cohortId}">${cohort.cohortName}</option>`
+            ).join('');
+        } catch (error) {
+            console.error("Lỗi khi tải dữ liệu form:", error);
+        }
+    }
+
+    setupAssignmentEventListeners() {
+        document.getElementById('addAssignmentBtn')?.addEventListener('click', () => {
+            this.openAssignmentModal();
+        });
+
+        document.getElementById('assignmentForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveAssignment();
+        });
+
+        // Thêm tìm kiếm
+        document.getElementById('searchAssignment')?.addEventListener('input', (e) => {
+            this.searchAssignments(e.target.value);
+        });
+    }
+
+    async openAssignmentModal(assignmentId = null) {
+        const modal = document.getElementById('assignmentModal');
+        const form = document.getElementById('assignmentForm');
+        
+        if (assignmentId) {
+            const response = await fetch(`https://localhost:7231/RealAdmins/GetAssignmentById?id=${assignmentId}`);
+            const assignment = await response.json();
+            
+            Object.keys(assignment).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) input.value = assignment[key];
+            });
+        } else {
+            form.reset();
+        }
+        
+        this.openModal('assignmentModal');
+    }
+
+    async saveAssignment() {
+        const form = document.getElementById('assignmentForm');
+        const formData = new FormData(form);
+        const assignmentData = Object.fromEntries(formData.entries());
+
+        const params = new URLSearchParams({
+            id: assignmentData.assignmentId || "",
+            teacherId: assignmentData.teacherId,
+            subjectId: assignmentData.subjectId,
+            cohortId: assignmentData.cohortId,
+            timeSlot: assignmentData.timeSlot,
+            status: assignmentData.status
+        });
+
+        const isUpdating = Boolean(assignmentData.assignmentId);
+        const url = isUpdating
+            ? `https://localhost:7231/RealAdmins/UpdateAssignment?${params}`
+            : `https://localhost:7231/RealAdmins/InsertAssignment?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} assignment`);
+
+            this.closeModal('assignmentModal');
+            await this.loadAssignments();
+        } catch (error) {
+            console.error(error);
+            alert("Có lỗi xảy ra khi lưu phân công. Vui lòng thử lại.");
+        }
+    }
+
+    async deleteAssignment(assignmentId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa phân công này?')) return;
+
+        try {
+            const response = await fetch(`https://localhost:7231/RealAdmins/DeleteAssignment?id=${assignmentId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Failed to delete assignment');
+
+            await this.loadAssignments();
+        } catch (error) {
+            console.error("Lỗi khi xóa phân công:", error);
+            alert("Không thể xóa phân công. Vui lòng thử lại.");
+        }
+    }
+
+    searchAssignments(query) {
+        const rows = document.querySelectorAll('#assignmentTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+        });
+    }
 
     async initializeAccountManagement() {
         await this.loadAccounts();
@@ -677,7 +1020,30 @@ class AdminDashboard {
     }
 
     closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+        const modal = document.getElementById(modalId);
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'block';
+        // Trigger reflow
+        modal.offsetHeight;
+        modal.classList.add('show');
+    }
+
+    // Thêm event listeners cho đóng modal khi click ra ngoài
+    setupModalOutsideClick() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal(modal.id);
+                }
+            });
+        });
     }
 }
 

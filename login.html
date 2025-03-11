@@ -8,25 +8,106 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Background Decorations -->
+    <div class="background-decorations">
+        <!-- Particles -->
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+
+        <!-- Glowing Lines -->
+        <div class="glow-line"></div>
+        <div class="glow-line"></div>
+        <div class="glow-line"></div>
+        <div class="glow-line"></div>
+
+        <!-- Floating Shapes -->
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+
+        <!-- Stars -->
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+    
+    <!-- Particles background -->
+    <div id="particles"></div>
+    
+    <!-- Decorative Elements -->
+    <div class="decorative-shape shape-1"></div>
+    <div class="decorative-shape shape-2"></div>
+    <div class="decorative-shape shape-3"></div>
+    <div class="decorative-shape shape-4"></div>
+    
+    <!-- Education Icons -->
+    <div class="education-icon icon-1">
+        <i class="fas fa-book"></i>
+    </div>
+    <div class="education-icon icon-2">
+        <i class="fas fa-graduation-cap"></i>
+    </div>
+    <div class="education-icon icon-3">
+        <i class="fas fa-pencil-alt"></i>
+    </div>
+    <div class="education-icon icon-4">
+        <i class="fas fa-calculator"></i>
+    </div>
+    
+    <!-- Notifications outside of form container -->
+    <div class="notification error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>Sai tên đăng nhập hoặc mật khẩu!</span>
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="notification success-message" id="successMessage">
+        <i class="fas fa-check-circle"></i>
+        <span>Đăng nhập thành công!</span>
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <h2><i class="fas fa-graduation-cap"></i> Đăng nhập</h2>
+                <h2>Đăng nhập</h2>
                 <p>Hệ thống quản lý điểm</p>
             </div>
+            
             <form id="loginForm">
                 <div class="form-group">
                     <label for="emailname">
                         <i class="fas fa-user"></i> Tên Email
                     </label>
-                    <input type="text" id="emailname" required>
+                    <input type="text" id="emailname" required placeholder="le@gmail.com">
                 </div>
                 <div class="form-group">
                     <label for="password">
                         <i class="fas fa-lock"></i> Mật khẩu
                     </label>
-                    <input type="password" id="password" required>
+                    <div class="password-container">
+                        <input type="password" id="password" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fas fa-eye" style="display: inline-block; font-size: 16px; color: #6C5CE7;"></i>
+                        </button>
+                    </div>
                 </div>
+                
+                <div class="form-group remember-me-container">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="rememberMe" class="toggle-input">
+                        <label for="rememberMe" class="toggle-label">
+                            <span class="toggle-inner"></span>
+                            <span class="toggle-switch-text">Nhớ tôi</span>
+                        </label>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label for="role">
                         <i class="fas fa-users"></i> Vai trò
@@ -37,8 +118,10 @@
                         <option value="student">Học sinh</option>
                     </select>
                 </div>
-                <button type="submit">
-                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                
+                <button type="submit" id="loginButton">
+                    <span class="button-text"><i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP</span>
+                    <span class="spinner"><i class="fas fa-circle-notch fa-spin"></i></span>
                 </button>
             </form>
         </div>
@@ -46,50 +129,184 @@
 
     <script src="js/auth.js"></script>
     <script>
-       document.addEventListener('DOMContentLoaded', async () => {
-        console.log("Initializing data...");
-        await initializeData(); // Ensure data is loaded before login
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const emailname = document.getElementById('emailname').value;
-        const password = document.getElementById('password').value;
-        const role = document.getElementById('role').value;
-
-        console.log("Login attempt:", { emailname, password, role });
-
-        // Ensure data is ready
-        await initializeData();
-
-        console.log("Data after initialization:", {
-            admins: window.admins,
-            teachers: window.teachers,
-            students: window.students
+        // Toggle Password Visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+                icon.style.display = 'inline-block';
+                icon.style.fontSize = '16px';
+                icon.style.color = '#6C5CE7';
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+                icon.style.display = 'inline-block';
+                icon.style.fontSize = '16px';
+                icon.style.color = '#6C5CE7';
+            }
+        });
+        
+        // Remember Me Functionality
+        function saveRememberMe() {
+            if (document.getElementById('rememberMe').checked) {
+                const email = document.getElementById('emailname').value;
+                const role = document.getElementById('role').value;
+                
+                localStorage.setItem('rememberedUser', JSON.stringify({
+                    email: email,
+                    role: role,
+                    remembered: true
+                }));
+                console.log("Đã lưu thông tin đăng nhập:", { email, role });
+            } else {
+                localStorage.removeItem('rememberedUser');
+                console.log("Đã xóa thông tin đăng nhập");
+            }
+        }
+        
+        // Test remember me functionality
+        document.getElementById('rememberMe').addEventListener('change', function() {
+            console.log("Trạng thái 'Nhớ tôi':", this.checked ? "Đã bật" : "Đã tắt");
+            // Immediately show the change visually for feedback
+            document.querySelector('.toggle-inner').style.backgroundColor = this.checked ? 
+                'var(--primary-color)' : '#e5e7eb';
+        });
+        
+        // Load saved credentials if any
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("Initializing data...");
+            await initializeData(); // Ensure data is loaded before login
+            
+            // Check for saved credentials
+            const savedUser = localStorage.getItem('rememberedUser');
+            if (savedUser) {
+                console.log("Tìm thấy thông tin đăng nhập đã lưu");
+                const userData = JSON.parse(savedUser);
+                document.getElementById('emailname').value = userData.email || '';
+                document.getElementById('role').value = userData.role || 'student';
+                document.getElementById('rememberMe').checked = userData.remembered || false;
+                
+                // Update toggle visually
+                if (userData.remembered) {
+                    document.querySelector('.toggle-inner').style.backgroundColor = 'var(--primary-color)';
+                }
+            } else {
+                console.log("Không tìm thấy thông tin đăng nhập đã lưu");
+            }
+            
+            // Close notification buttons
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.notification').classList.remove('show');
+                });
+            });
         });
 
-        const loginSuccess = await login(emailname, password, role);
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading spinner
+            const loginButton = document.getElementById('loginButton');
+            loginButton.classList.add('loading');
+            
+            // Hide any existing notifications
+            document.querySelectorAll('.notification').forEach(notification => {
+                notification.classList.remove('show');
+            });
+            
+            const emailname = document.getElementById('emailname').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
 
-        if (loginSuccess) {
-            let redirectUrl = '';
+            // Save remember me preference
+            saveRememberMe();
+            
+            // Ensure data is ready
+            await initializeData();
 
-            switch (role) {
-                case 'admin':
-                    redirectUrl = 'admin-dashboard.html';
-                    break;
-                case 'teacher':
-                    redirectUrl = 'teacher-dashboard.html';
-                    break;
-                case 'student':
-                    redirectUrl = 'student-dashboard.html';
-                    break;
+            try {
+                const loginSuccess = await login(emailname, password, role);
+                
+                // Hide loading spinner
+                loginButton.classList.remove('loading');
+                
+                if (loginSuccess) {
+                    // Show success notification
+                    showNotification('success', 'Đăng nhập thành công!');
+                    
+                    // Redirect after a brief delay for animation
+                    setTimeout(() => {
+                        let redirectUrl = '';
+                        
+                        switch (role) {
+                            case 'admin':
+                                redirectUrl = 'admin-dashboard.html';
+                                break;
+                            case 'teacher':
+                                redirectUrl = 'teacher-dashboard.html';
+                                break;
+                            case 'student':
+                                redirectUrl = 'student-dashboard.html';
+                                break;
+                        }
+                        
+                        window.location.href = redirectUrl;
+                    }, 1500);
+                } else {
+                    // Show error notification
+                    showNotification('error', 'Sai tên đăng nhập hoặc mật khẩu!');
+                }
+            } catch (error) {
+                // Hide loading spinner
+                loginButton.classList.remove('loading');
+                
+                // Show error notification
+                showNotification('error', 'Lỗi đăng nhập: ' + error.message);
+                console.error("Login error:", error);
             }
+        });
 
-            window.location.href = redirectUrl;
-        } else {
-            alert('Sai tên đăng nhập hoặc mật khẩu!');
+        // Test notification for development
+        function showNotification(type, message) {
+            // Hide any existing notifications
+            document.querySelectorAll('.notification').forEach(notification => {
+                notification.classList.remove('show');
+            });
+
+            // Show selected notification
+            const notification = document.getElementById(type + 'Message');
+            if (notification) {
+                if (message) {
+                    notification.querySelector('span').textContent = message;
+                }
+                notification.classList.add('show');
+
+                // Auto hide after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
         }
-    });
+
+        // Add test button to make testing easier
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to test notifications
+            document.addEventListener('keydown', function(e) {
+                // Alt+S for Success message
+                if (e.altKey && e.key === 's') {
+                    showNotification('success', 'Đăng nhập thành công!');
+                }
+                // Alt+E for Error message
+                if (e.altKey && e.key === 'e') {
+                    showNotification('error', 'Sai tên đăng nhập hoặc mật khẩu!');
+                }
+            });
+        });
     </script>
 </body>
 </html> 
