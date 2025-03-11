@@ -653,4 +653,172 @@ canvas#studentDistributionChart {
     top: 50%;
     transform: translateY(-50%);
     color: #6b7280;
+}
+
+/* Thêm các quy tắc responsive cho thiết bị di động */
+@media (max-width: 768px) {
+    /* Điều chỉnh bố cục chính */
+    .dashboard {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 10px;
+    }
+    
+    /* Điều chỉnh topbar */
+    .topbar {
+        padding: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .user-info {
+        margin-left: auto;
+    }
+    
+    .btn-logout span {
+        display: none;
+    }
+    
+    /* Điều chỉnh các card */
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    /* Điều chỉnh bảng */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Responsive table - phiên bản card cho mobile */
+    @media (max-width: 640px) {
+        table, thead, tbody, th, td, tr {
+            display: block;
+        }
+        
+        thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+        
+        tr {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: #fff;
+        }
+        
+        td {
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 50%;
+            text-align: right;
+        }
+        
+        td:before {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 45%;
+            padding-right: 10px;
+            white-space: nowrap;
+            font-weight: bold;
+            text-align: left;
+        }
+        
+        /* Thêm nhãn cho mỗi ô dữ liệu */
+        #studentTable td:nth-of-type(1):before { content: "Họ"; }
+        #studentTable td:nth-of-type(2):before { content: "Tên"; }
+        #studentTable td:nth-of-type(3):before { content: "Email"; }
+        #studentTable td:nth-of-type(4):before { content: "Giới tính"; }
+        #studentTable td:nth-of-type(5):before { content: "Địa chỉ"; }
+        #studentTable td:nth-of-type(6):before { content: "Ngày sinh"; }
+        #studentTable td:nth-of-type(7):before { content: "SĐT"; }
+        #studentTable td:nth-of-type(8):before { content: "Mật khẩu"; }
+        #studentTable td:nth-of-type(9):before { content: "Lớp"; }
+        #studentTable td:nth-of-type(10):before { content: "Thao tác"; }
+        
+        #teacherTable td:nth-of-type(1):before { content: "Họ"; }
+        #teacherTable td:nth-of-type(2):before { content: "Tên"; }
+        #teacherTable td:nth-of-type(3):before { content: "Email"; }
+        #teacherTable td:nth-of-type(4):before { content: "Giới tính"; }
+        #teacherTable td:nth-of-type(5):before { content: "Địa chỉ"; }
+        #teacherTable td:nth-of-type(6):before { content: "Ngày sinh"; }
+        #teacherTable td:nth-of-type(7):before { content: "SĐT"; }
+        #teacherTable td:nth-of-type(8):before { content: "Mật khẩu"; }
+        #teacherTable td:nth-of-type(9):before { content: "Thao tác"; }
+        
+        #cohortTable td:nth-of-type(1):before { content: "Tên lớp"; }
+        #cohortTable td:nth-of-type(2):before { content: "Mô tả"; }
+        #cohortTable td:nth-of-type(3):before { content: "Tổng học sinh"; }
+        #cohortTable td:nth-of-type(4):before { content: "Thao tác"; }
+        
+        #assignmentTable td:nth-of-type(1):before { content: "Giáo viên"; }
+        #assignmentTable td:nth-of-type(2):before { content: "Môn học"; }
+        #assignmentTable td:nth-of-type(3):before { content: "Lớp"; }
+        #assignmentTable td:nth-of-type(4):before { content: "Thời gian"; }
+        #assignmentTable td:nth-of-type(5):before { content: "Trạng thái"; }
+        #assignmentTable td:nth-of-type(6):before { content: "Thao tác"; }
+    }
+    
+    /* Điều chỉnh action bar */
+    .actions-bar {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    /* Điều chỉnh modal */
+    .modal-dialog {
+        width: 95%;
+        max-width: 95%;
+        margin: 20px auto;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .modal-body {
+        max-height: 60vh;
+    }
+    
+    /* Điều chỉnh form */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    /* Điều chỉnh dashboard */
+    .stats-grid, .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    /* Điều chỉnh nút */
+    .btn-primary, .btn-edit, .btn-delete {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    /* Cải thiện khả năng nhấp vào các nút */
+    .btn-edit, .btn-delete {
+        margin: 2px;
+        padding: 8px 10px;
+    }
 } 

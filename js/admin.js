@@ -5,6 +5,16 @@ class AdminDashboard {
         this.initializeNavigation();
         // Tự động tải trang tổng quan khi khởi tạo
         this.loadPage('dashboard');
+        
+        // Thêm xử lý cho mobile
+        this.isMobile = window.innerWidth <= 768;
+        this.setupMobileHandlers();
+        
+        // Theo dõi thay đổi kích thước màn hình
+        window.addEventListener('resize', () => {
+            this.isMobile = window.innerWidth <= 768;
+            this.handleResponsiveLayout();
+        });
     }
 
     initializeNavigation() {
@@ -35,6 +45,14 @@ class AdminDashboard {
             // Initialize page functions
             this.initializePageFunctions(page);
             this.currentPage = page;
+            
+            // Sau khi tải trang, đóng sidebar nếu đang ở chế độ mobile
+            if (this.isMobile) {
+                this.closeSidebar();
+            }
+            
+            // Tối ưu hóa bảng cho mobile
+            this.optimizeTablesForMobile();
         } catch (error) {
             console.error('Error loading page:', error);
         }
@@ -1044,6 +1062,73 @@ class AdminDashboard {
                 }
             });
         });
+    }
+
+    // Thêm phương thức mới
+    setupMobileHandlers() {
+        // Xử lý toggle sidebar
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (menuToggle && sidebar && overlay) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            });
+            
+            overlay.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+            
+            // Đóng sidebar khi chọn menu item trên mobile
+            const menuItems = document.querySelectorAll('.sidebar li');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (this.isMobile) {
+                        this.closeSidebar();
+                    }
+                });
+            });
+        }
+    }
+
+    // Thêm phương thức mới
+    closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (sidebar && overlay) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+    }
+
+    // Thêm phương thức mới
+    handleResponsiveLayout() {
+        // Xử lý các thay đổi layout khi chuyển đổi giữa desktop và mobile
+        if (!this.isMobile) {
+            this.closeSidebar();
+        }
+        
+        // Điều chỉnh bảng dữ liệu nếu cần
+        this.optimizeTablesForMobile();
+    }
+
+    // Thêm phương thức mới
+    optimizeTablesForMobile() {
+        // Tối ưu hóa hiển thị bảng trên thiết bị di động
+        if (this.isMobile) {
+            // Thêm class mobile-view cho các bảng
+            document.querySelectorAll('table').forEach(table => {
+                table.classList.add('mobile-view');
+            });
+        } else {
+            // Xóa class mobile-view
+            document.querySelectorAll('table').forEach(table => {
+                table.classList.remove('mobile-view');
+            });
+        }
     }
 }
 

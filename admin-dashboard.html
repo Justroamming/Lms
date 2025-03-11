@@ -8,10 +8,90 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Responsive styles for mobile */
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .main-content {
+                width: 100%;
+                margin-left: 0;
+            }
+            
+            .topbar {
+                justify-content: space-between;
+                padding: 10px 15px;
+            }
+            
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: none;
+                color: #333;
+                font-size: 24px;
+                cursor: pointer;
+            }
+            
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .overlay.active {
+                display: block;
+            }
+            
+            /* Adjust tables for mobile */
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            /* Adjust cards for mobile */
+            .stats-grid, .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Adjust forms for mobile */
+            .modal-dialog {
+                width: 95%;
+                max-width: 95%;
+            }
+            
+            /* Ẩn text trên nút đăng xuất, chỉ hiện icon */
+            .btn-logout span {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="overlay" id="sidebarOverlay"></div>
     <div class="dashboard">
-        <div class="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>Admin Dashboard</h2>
             </div>
@@ -35,10 +115,13 @@
         </div>
         <div class="main-content">
             <div class="topbar">
+                <button id="menuToggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="user-info">
                     <span>Admin</span>
                     <button onclick="logout()" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        <i class="fas fa-sign-out-alt"></i> <span>Đăng xuất</span>
                     </button>
                 </div>
             </div>
@@ -49,15 +132,60 @@
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
     <script>
+        // Khởi tạo đối tượng AdminDashboard
+        const adminDashboard = new AdminDashboard();
+        
         // Kiểm tra quyền admin
         document.addEventListener('DOMContentLoaded', () => {
             const user = getCurrentUser();
             if (!user || user.role !== 'admin') {
                 window.location.href = 'login.html';
             }
+            
             // Khởi tạo sự kiện đóng modal khi click ra ngoài
             adminDashboard.setupModalOutsideClick();
+            
+            // Mobile sidebar toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            });
+            
+            // Close sidebar when clicking on overlay
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+            
+            // Close sidebar when clicking on menu items (on mobile)
+            const menuItems = document.querySelectorAll('.sidebar li');
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
         });
+        
+        // Hàm đăng xuất
+        function logout() {
+            clearCurrentUser();
+            window.location.href = 'login.html';
+        }
     </script>
 </body>
 </html> 
