@@ -25,11 +25,12 @@ class Navigation {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const content = await response.text();
-            const mainContent = document.querySelector('main.dashboard');
+            const mainContent = document.getElementById('mainContent');
             if (mainContent) {
                 mainContent.innerHTML = content;
                 this.initializeComponent(page);
                 this.updateActiveLink(page);
+                this.currentPage = page;
             } else {
                 console.error('Main content container not found');
             }
@@ -53,7 +54,6 @@ class Navigation {
             case 'profile':
                 new StudentProfile();
                 break;
-          
         }
     }
 
