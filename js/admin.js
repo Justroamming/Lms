@@ -15,6 +15,9 @@ class AdminDashboard {
             this.isMobile = window.innerWidth <= 768;
             this.handleResponsiveLayout();
         });
+
+        // Khởi tạo xử lý popup
+        this.setupPopupHandlers();
     }
 
     initializeNavigation() {
@@ -307,91 +310,206 @@ class AdminDashboard {
         });
     }
 
-    async openStudentModal(studentId) {
-        const modal = document.getElementById('studentModal');
-        const form = document.getElementById('studentForm');
-    
-        if (studentId) {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentById?id=${studentId}`);
-            const student = await response.json();
-            
-            Object.keys(student).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = student[key];
-            });
-            form.querySelector("#studentId").value = studentId;
-        } else {
-            form.reset();
+    async openStudentModal(studentId = null) {
+        // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
+        const modalTitle = document.querySelector('#studentModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = studentId ? 'Chỉnh sửa học sinh' : 'Thêm học sinh mới';
         }
-    
+        
+        // Reset form
+        const form = document.getElementById('studentForm');
+        if (form) {
+            form.reset();
+            
+            // Đặt ID học sinh cho form
+            const studentIdField = form.querySelector('[name="studentId"]');
+            if (studentIdField) {
+                studentIdField.value = studentId || '';
+            }
+            
+            // Đảm bảo tải danh sách lớp học cho select
+            await this.loadCohortsForSelect();
+            
+            // Nếu có ID học sinh, tải thông tin học sinh từ API
+            if (studentId) {
+                try {
+                    // Hiển thị thông báo đang tải
+                    this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
+                    
+                    // Gọi API để lấy thông tin học sinh
+                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentById?id=${studentId}`);
+                    
+                    // Ẩn thông báo đang tải
+                    this.hideNotification();
+                    
+                    if (!response.ok) {
+                        throw new Error('Không thể tải thông tin học sinh');
+                    }
+                    
+                    const student = await response.json();
+                    console.log('Student data from API:', student);
+                    
+                    // Điền thông tin học sinh vào form
+                    if (student) {
+                        // Xử lý các trường hợp khác nhau của API
+                        const studentData = student.data || student;
+                        
+                        // Log dữ liệu để kiểm tra
+                        console.log('Student data to fill form:', studentData);
+                        
+                        try {
+                            // Form fields
+                            const lastNameField = form.querySelector('[name="lastName"]');
+                            const firstNameField = form.querySelector('[name="firstName"]');
+                            const emailField = form.querySelector('[name="email"]');
+                            const genderField = form.querySelector('[name="gender"]');
+                            const addressField = form.querySelector('[name="address"]');
+                            const dobField = form.querySelector('[name="dob"]');
+                            const phoneField = form.querySelector('[name="phone"]');
+                            const passwordField = form.querySelector('[name="password"]');
+                            const cohortIdField = form.querySelector('[name="cohortId"]');
+                            
+                            // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
+                            if (lastNameField) lastNameField.value = studentData.lastName || studentData.LName || '';
+                            if (firstNameField) firstNameField.value = studentData.firstName || studentData.FName || '';
+                            if (emailField) emailField.value = studentData.email || '';
+                            if (genderField) genderField.value = studentData.gender || 'Male';
+                            if (addressField) addressField.value = studentData.address || '';
+                            
+                            // Xử lý ngày sinh
+                            if (dobField && studentData.dob) {
+                                let dobValue = studentData.dob;
+                                // Cắt thời gian nếu cần thiết
+                                if (dobValue.includes('T')) {
+                                    dobValue = dobValue.split('T')[0];
+                                }
+                                dobField.value = dobValue;
+                            }
+                            
+                            if (phoneField) phoneField.value = studentData.phone || '';
+                            if (passwordField) passwordField.value = studentData.password || '';
+                            
+                            // Đặt giá trị cho lớp học
+                            if (cohortIdField) {
+                                const cohortId = studentData.cohortId || '';
+                                cohortIdField.value = cohortId;
+                                
+                                // Nếu không có option với giá trị này, thêm log để kiểm tra
+                                if (cohortId && !Array.from(cohortIdField.options).some(opt => opt.value === cohortId)) {
+                                    console.warn(`Lớp học với ID ${cohortId} không tồn tại trong danh sách dropdown`);
+                                }
+                            }
+                            
+                            // Log các trường đã điền
+                            console.log('Form filled with the following values:', {
+                                lastName: lastNameField?.value,
+                                firstName: firstNameField?.value,
+                                email: emailField?.value,
+                                gender: genderField?.value,
+                                address: addressField?.value,
+                                dob: dobField?.value,
+                                phone: phoneField?.value,
+                                password: passwordField?.value,
+                                cohortId: cohortIdField?.value
+                            });
+                        } catch (formError) {
+                            console.error('Error filling form fields:', formError);
+                        }
+                    } else {
+                        console.warn('API returned empty or null student data');
+                        this.showNotification('warning', 'Dữ liệu không đầy đủ', 'API trả về dữ liệu rỗng hoặc không đầy đủ.');
+                    }
+                } catch (error) {
+                    console.error('Error loading student data:', error);
+                    this.showNotification('error', 'Lỗi tải dữ liệu', 'Không thể tải thông tin học sinh. Vui lòng thử lại sau.');
+                }
+            }
+        }
+        
+        // Mở modal
         this.openModal('studentModal');
     }
     
 
     async saveStudent() {
-        const form = document.getElementById('studentForm');
-        const formData = new FormData(form);
-        const studentData = Object.fromEntries(formData.entries());
-    
-      
-        const params = new URLSearchParams({
-            id: studentData.studentId || "",  
-            FName: studentData.firstName,
-            LName: studentData.lastName,
-            email: studentData.email,
-            gender: studentData.gender,
-            address: studentData.address,
-            dob: studentData.dob,
-            phone: studentData.phone,
-            password: studentData.password,
-            cohortId: studentData.cohortId
-        });
-    
-        const isUpdating = Boolean(studentData.studentId);
-        const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateStudent?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertStudent?${params}`;
-    
-        const method = isUpdating ? "PUT" : "POST";
-    
         try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' }
+            const form = document.getElementById('studentForm');
+            const formData = new FormData(form);
+            const studentData = {};
+            
+            formData.forEach((value, key) => {
+                studentData[key] = value;
             });
-    
-            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} student`);
-    
-            this.closeModal('studentModal');
-            await this.loadStudents();
+            
+            studentData.studentId = studentData.studentId || null;
+            
+            // Mở popup xác nhận
+            this.showConfirmation(
+                'Xác nhận lưu học sinh',
+                'Bạn có chắc chắn muốn lưu thông tin học sinh này?',
+                async () => {
+                    try {
+                        const isUpdate = studentData.studentId ? true : false;
+                        
+                        // Gửi yêu cầu lưu
+                        await this.saveStudentRequest(studentData);
+                        
+                        // Đóng modal
+                        this.closeModal('studentModal');
+                        
+                        // Cập nhật danh sách học sinh
+                        await this.loadStudents();
+                        
+                        // Hiển thị thông báo thành công
+                        this.showNotification(
+                            'success',
+                            isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                            isUpdate ? 'Thông tin học sinh đã được cập nhật.' : 'Học sinh mới đã được thêm vào hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error saving student:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi lưu thông tin',
+                            'Đã xảy ra lỗi khi lưu thông tin học sinh. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
         } catch (error) {
-            console.error(error);
+            console.error('Error in saveStudent:', error);
         }
     }
     
     
     async deleteStudent(studentId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa học sinh này?')) return;
-
-    try {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa học sinh: ${response.status}`);
+        try {
+            this.showConfirmation(
+                'Xác nhận xóa học sinh',
+                'Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu không thể khôi phục sau khi xóa.',
+                async () => {
+                    try {
+                        await this.deleteStudentRequest(studentId);
+                        await this.loadStudents();
+                        this.showNotification(
+                            'success',
+                            'Xóa học sinh thành công',
+                            'Học sinh đã được xóa khỏi hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error deleting student:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi xóa học sinh',
+                            'Đã xảy ra lỗi khi xóa học sinh. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in deleteStudent:', error);
         }
-
-        alert('Xóa học sinh thành công!');
-        await this.loadStudents();
-    } catch (error) {
-        console.error("Lỗi khi xóa học sinh:", error);
-        alert("Không thể xóa học sinh. Vui lòng thử lại.");
-    }
     }
 
 
@@ -458,91 +576,190 @@ class AdminDashboard {
         });
     }
 
-    async openTeacherModal(teacherId) {
-        const modal = document.getElementById('teacherModal');
-        const form = document.getElementById('teacherForm');
-        
-        form.reset(); 
-    
-        if (teacherId) {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetTeacherById?id=${teacherId}`);
-            const teacher = await response.json();
-            
-            Object.keys(teacher).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = teacher[key];
-            });
-            form.querySelector("#teacherId").value = teacherId;
+    async openTeacherModal(teacherId = null) {
+        // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
+        const modalTitle = document.querySelector('#teacherModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = teacherId ? 'Chỉnh sửa giáo viên' : 'Thêm giáo viên mới';
         }
-    
+        
+        // Reset form
+        const form = document.getElementById('teacherForm');
+        if (form) {
+            form.reset();
+            
+            // Đặt ID giáo viên cho form
+            const teacherIdField = form.querySelector('[name="teacherId"]');
+            if (teacherIdField) {
+                teacherIdField.value = teacherId || '';
+            }
+            
+            // Nếu có ID giáo viên, tải thông tin giáo viên từ API
+            if (teacherId) {
+                try {
+                    // Hiển thị thông báo đang tải
+                    this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
+                    
+                    // Gọi API để lấy thông tin giáo viên
+                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetTeacherById?id=${teacherId}`);
+                    
+                    // Ẩn thông báo đang tải
+                    this.hideNotification();
+                    
+                    if (!response.ok) {
+                        throw new Error('Không thể tải thông tin giáo viên');
+                    }
+                    
+                    const teacher = await response.json();
+                    console.log('Teacher data from API:', teacher);
+                    
+                    // Điền thông tin giáo viên vào form
+                    if (teacher) {
+                        // Xử lý các trường hợp khác nhau của API
+                        const teacherData = teacher.data || teacher;
+                        
+                        // Log dữ liệu để kiểm tra
+                        console.log('Teacher data to fill form:', teacherData);
+                        
+                        try {
+                            // Form fields
+                            const lastNameField = form.querySelector('[name="lastName"]');
+                            const firstNameField = form.querySelector('[name="firstName"]');
+                            const emailField = form.querySelector('[name="email"]');
+                            const genderField = form.querySelector('[name="gender"]');
+                            const addressField = form.querySelector('[name="address"]');
+                            const dobField = form.querySelector('[name="dob"]');
+                            const phoneField = form.querySelector('[name="phone"]');
+                            const passwordField = form.querySelector('[name="password"]');
+                            
+                            // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
+                            if (lastNameField) lastNameField.value = teacherData.lastName || teacherData.LName || '';
+                            if (firstNameField) firstNameField.value = teacherData.firstName || teacherData.FName || '';
+                            if (emailField) emailField.value = teacherData.email || '';
+                            if (genderField) genderField.value = teacherData.gender || 'Male';
+                            if (addressField) addressField.value = teacherData.address || '';
+                            
+                            // Xử lý ngày sinh
+                            if (dobField && teacherData.dob) {
+                                let dobValue = teacherData.dob;
+                                // Cắt thời gian nếu cần thiết
+                                if (dobValue.includes('T')) {
+                                    dobValue = dobValue.split('T')[0];
+                                }
+                                dobField.value = dobValue;
+                            }
+                            
+                            if (phoneField) phoneField.value = teacherData.phone || '';
+                            if (passwordField) passwordField.value = teacherData.password || '';
+                            
+                            // Log các trường đã điền
+                            console.log('Form filled with the following values:', {
+                                lastName: lastNameField?.value,
+                                firstName: firstNameField?.value,
+                                email: emailField?.value,
+                                gender: genderField?.value,
+                                address: addressField?.value,
+                                dob: dobField?.value,
+                                phone: phoneField?.value,
+                                password: passwordField?.value
+                            });
+                        } catch (formError) {
+                            console.error('Error filling form fields:', formError);
+                        }
+                    } else {
+                        console.warn('API returned empty or null teacher data');
+                        this.showNotification('warning', 'Dữ liệu không đầy đủ', 'API trả về dữ liệu rỗng hoặc không đầy đủ.');
+                    }
+                } catch (error) {
+                    console.error('Error loading teacher data:', error);
+                    this.showNotification('error', 'Lỗi tải dữ liệu', 'Không thể tải thông tin giáo viên. Vui lòng thử lại sau.');
+                }
+            }
+        }
+        
+        // Mở modal
         this.openModal('teacherModal');
     }
     
 
     async saveTeacher() {
-        const form = document.getElementById('teacherForm');
-        const formData = new FormData(form);
-        const teacherData = Object.fromEntries(formData.entries());
-    
-
-        const params = new URLSearchParams({
-            id: teacherData.teacherId || "",  
-            FName: teacherData.firstName,
-            LName: teacherData.lastName,
-            email: teacherData.email,
-            gender: teacherData.gender,
-            phone: teacherData.phone,        
-            address: teacherData.address,
-            dob: teacherData.dob,
-            password: teacherData.password,
-
-        });
-    
-        const isUpdating = Boolean(teacherData.teacherId);
-        const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateTeacher?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertTeacher?${params}`;
-    
-        const method = isUpdating ? "PUT" : "POST";
-    
         try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' }
+            const form = document.getElementById('teacherForm');
+            const formData = new FormData(form);
+            const teacherData = {};
+            
+            formData.forEach((value, key) => {
+                teacherData[key] = value;
             });
-    
-            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} teacher`);
-    
-            this.closeModal('teacherModal');
-            await this.loadTeachers();
+            
+            teacherData.teacherId = teacherData.teacherId || null;
+            
+            // Mở popup xác nhận
+            this.showConfirmation(
+                'Xác nhận lưu giáo viên',
+                'Bạn có chắc chắn muốn lưu thông tin giáo viên này?',
+                async () => {
+                    try {
+                        const isUpdate = teacherData.teacherId ? true : false;
+                        
+                        // Gửi yêu cầu lưu
+                        await this.saveTeacherRequest(teacherData);
+                        
+                        // Đóng modal
+                        this.closeModal('teacherModal');
+                        
+                        // Cập nhật danh sách giáo viên
+                        await this.loadTeachers();
+                        
+                        // Hiển thị thông báo thành công
+                        this.showNotification(
+                            'success',
+                            isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                            isUpdate ? 'Thông tin giáo viên đã được cập nhật.' : 'Giáo viên mới đã được thêm vào hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error saving teacher:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi lưu thông tin',
+                            'Đã xảy ra lỗi khi lưu thông tin giáo viên. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
         } catch (error) {
-            console.error(error);
+            console.error('Error in saveTeacher:', error);
         }
     }
     
     
     async deleteTeacher(teacherId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa giáo viên này?')) return;
-
-    try {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa giáo viên: ${response.status}`);
+        try {
+            this.showConfirmation(
+                'Xác nhận xóa giáo viên',
+                'Bạn có chắc chắn muốn xóa giáo viên này không? Dữ liệu không thể khôi phục sau khi xóa.',
+                async () => {
+                    try {
+                        await this.deleteTeacherRequest(teacherId);
+                        await this.loadTeachers();
+                        this.showNotification(
+                            'success',
+                            'Xóa giáo viên thành công',
+                            'Giáo viên đã được xóa khỏi hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error deleting teacher:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi xóa giáo viên',
+                            'Đã xảy ra lỗi khi xóa giáo viên. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in deleteTeacher:', error);
         }
-
-        alert('Xóa giáo viên thành công!');
-        await this.loadTeachers();
-    } catch (error) {
-        console.error("Lỗi khi xóa giáo viên:", error);
-        alert("Không thể xóa giáo viên. Vui lòng thử lại.");
-    }
     }
 
 
@@ -698,36 +915,139 @@ class AdminDashboard {
         });
     }
 
-    async openCohortModal(cohortId) {
-        const modal = document.getElementById('cohortModal');
-        const form = document.getElementById('cohortForm');
-        
-        if (cohortId) {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetCohortById?id=${cohortId}`);
-            const cohortData = await response.json();
-            Object.keys(cohortData).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = cohortData[key];
-            });
-            form.querySelector('[name="cohortId"]').value = cohortId;
-        } else {
-            form.reset();
+    async openCohortModal(cohortId = null) {
+        // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
+        const modalTitle = document.querySelector('#cohortModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = cohortId ? 'Chỉnh sửa lớp học' : 'Thêm lớp học mới';
         }
         
+        // Reset form
+        const form = document.getElementById('cohortForm');
+        if (form) {
+            form.reset();
+            
+            // Đặt ID lớp học cho form
+            const cohortIdField = form.querySelector('[name="cohortId"]');
+            if (cohortIdField) {
+                cohortIdField.value = cohortId || '';
+            }
+            
+            // Nếu có ID lớp học, tải thông tin lớp học từ API
+            if (cohortId) {
+                try {
+                    // Hiển thị thông báo đang tải
+                    this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
+                    
+                    // Gọi API để lấy thông tin lớp học
+                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetCohortById?id=${cohortId}`);
+                    
+                    // Ẩn thông báo đang tải
+                    this.hideNotification();
+                    
+                    if (!response.ok) {
+                        throw new Error('Không thể tải thông tin lớp học');
+                    }
+                    
+                    const cohort = await response.json();
+                    console.log('Cohort data from API:', cohort);
+                    
+                    // Điền thông tin lớp học vào form
+                    if (cohort) {
+                        // Xử lý các trường hợp khác nhau của API
+                        const cohortData = cohort.data || cohort;
+                        
+                        // Log dữ liệu để kiểm tra
+                        console.log('Cohort data to fill form:', cohortData);
+                        
+                        try {
+                            // Form fields
+                            const nameField = form.querySelector('[name="cohortName"]');
+                            const descriptionField = form.querySelector('[name="description"]');
+                            
+                            // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
+                            if (nameField) nameField.value = cohortData.name || cohortData.CName || '';
+                            if (descriptionField) descriptionField.value = cohortData.description || cohortData.Description || '';
+                            
+                            // Log các trường đã điền
+                            console.log('Form filled with the following values:', {
+                                name: nameField?.value,
+                                description: descriptionField?.value
+                            });
+                        } catch (formError) {
+                            console.error('Error filling form fields:', formError);
+                        }
+                    } else {
+                        console.warn('API returned empty or null cohort data');
+                        this.showNotification('warning', 'Dữ liệu không đầy đủ', 'API trả về dữ liệu rỗng hoặc không đầy đủ.');
+                    }
+                } catch (error) {
+                    console.error('Error loading cohort data:', error);
+                    this.showNotification('error', 'Lỗi tải dữ liệu', 'Không thể tải thông tin lớp học. Vui lòng thử lại sau.');
+                }
+            }
+        }
+        
+        // Mở modal
         this.openModal('cohortModal');
     }
     
     async saveCohort() {
-        const form = document.getElementById('cohortForm');
-        const formData = new FormData(form);
-        const cohortData = Object.fromEntries(formData.entries());
-        
+        try {
+            const form = document.getElementById('cohortForm');
+            const formData = new FormData(form);
+            const cohortData = {};
+            
+            formData.forEach((value, key) => {
+                cohortData[key] = value;
+            });
+            
+            cohortData.cohortId = cohortData.cohortId || null;
+            
+            // Mở popup xác nhận
+            this.showConfirmation(
+                'Xác nhận lưu lớp học',
+                'Bạn có chắc chắn muốn lưu thông tin lớp học này?',
+                async () => {
+                    try {
+                        const isUpdate = cohortData.cohortId ? true : false;
+                        
+                        // Gửi yêu cầu lưu
+                        await this.saveCohortRequest(cohortData);
+                        
+                        // Đóng modal
+                        this.closeModal('cohortModal');
+                        
+                        // Cập nhật danh sách lớp học
+                        await this.loadCohorts();
+                        
+                        // Hiển thị thông báo thành công
+                        this.showNotification(
+                            'success',
+                            isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                            isUpdate ? 'Thông tin lớp học đã được cập nhật.' : 'Lớp học mới đã được thêm vào hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error saving cohort:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi lưu thông tin',
+                            'Đã xảy ra lỗi khi lưu thông tin lớp học. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in saveCohort:', error);
+        }
+    }
+
+    async saveCohortRequest(cohortData) {
         const params = new URLSearchParams({
             id: cohortData.cohortId || "",
-            CName: cohortData.cohortName,
-            Description: cohortData.description,
-            
-        })
+            name: cohortData.cohortName,
+            description: cohortData.description
+        });
 
         const isUpdating = Boolean(cohortData.cohortId);
         const url = isUpdating
@@ -735,25 +1055,60 @@ class AdminDashboard {
             : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertCohort?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
-        try{
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} cohort`);
-            this.closeModal('cohortModal');
-            await this.loadCohorts();
-        }
-        catch (error) {
-            console.error(error);
-        }
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} cohort`);
+        
+        return response.json();
     }
 
     async deleteCohort(cohortId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa lớp học này?')) return;
+        try {
+            this.showConfirmation(
+                'Xác nhận xóa lớp học',
+                'Bạn có chắc chắn muốn xóa lớp học này không? Dữ liệu không thể khôi phục sau khi xóa.',
+                async () => {
+                    try {
+                        await this.deleteCohortRequest(cohortId);
+                        await this.loadCohorts();
+                        this.showNotification(
+                            'success',
+                            'Xóa lớp học thành công',
+                            'Lớp học đã được xóa khỏi hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error deleting cohort:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi xóa lớp học',
+                            'Đã xảy ra lỗi khi xóa lớp học. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in deleteCohort:', error);
+        }
+    }
+
+    async deleteCohortRequest(cohortId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteCohort?id=${cohortId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa lớp học: ${response.status}`);
+        }
         
-        await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteCohort?id=${cohortId}`, { method: 'DELETE' });
-        await this.loadCohorts();
+        return true;
     }
 
     
@@ -890,29 +1245,157 @@ class AdminDashboard {
     }
 
     async openAssignmentModal(assignmentId = null) {
-        const modal = document.getElementById('assignmentModal');
-        const form = document.getElementById('assignmentForm');
-        
-        if (assignmentId) {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetAssignmentById?id=${assignmentId}`);
-            const assignment = await response.json();
-            
-            Object.keys(assignment).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = assignment[key];
-            });
-        } else {
-            form.reset();
+        // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
+        const modalTitle = document.querySelector('#assignmentModal .modal-header h3');
+        if (modalTitle) {
+            modalTitle.textContent = assignmentId ? 'Chỉnh sửa phân công' : 'Thêm phân công mới';
         }
         
+        // Reset form
+        const form = document.getElementById('assignmentForm');
+        if (form) {
+            form.reset();
+            
+            // Đặt ID phân công cho form
+            const assignmentIdField = form.querySelector('[name="assignmentId"]');
+            if (assignmentIdField) {
+                assignmentIdField.value = assignmentId || '';
+            }
+            
+            // Tải dữ liệu cho các dropdown trước
+            await this.loadAssignmentFormData();
+            
+            // Nếu có ID phân công, tải thông tin phân công từ API
+            if (assignmentId) {
+                try {
+                    // Hiển thị thông báo đang tải
+                    this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
+                    
+                    // Gọi API để lấy thông tin phân công
+                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetAssignmentById?id=${assignmentId}`);
+                    
+                    // Ẩn thông báo đang tải
+                    this.hideNotification();
+                    
+                    if (!response.ok) {
+                        throw new Error('Không thể tải thông tin phân công');
+                    }
+                    
+                    const assignment = await response.json();
+                    console.log('Assignment data from API:', assignment);
+                    
+                    // Điền thông tin phân công vào form
+                    if (assignment) {
+                        // Xử lý các trường hợp khác nhau của API
+                        const assignmentData = assignment.data || assignment;
+                        
+                        // Log dữ liệu để kiểm tra
+                        console.log('Assignment data to fill form:', assignmentData);
+                        
+                        try {
+                            // Form fields
+                            const teacherIdField = form.querySelector('[name="teacherId"]');
+                            const subjectIdField = form.querySelector('[name="subjectId"]');
+                            const cohortIdField = form.querySelector('[name="cohortId"]');
+                            const timeSlotField = form.querySelector('[name="timeSlot"]');
+                            const statusField = form.querySelector('[name="status"]');
+                            
+                            // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
+                            if (teacherIdField) {
+                                const teacherId = assignmentData.teacherId || '';
+                                teacherIdField.value = teacherId;
+                            }
+                            
+                            if (subjectIdField) {
+                                const subjectId = assignmentData.subjectId || '';
+                                subjectIdField.value = subjectId;
+                            }
+                            
+                            if (cohortIdField) {
+                                const cohortId = assignmentData.cohortId || '';
+                                cohortIdField.value = cohortId;
+                            }
+                            
+                            if (timeSlotField) timeSlotField.value = assignmentData.timeSlot || '';
+                            if (statusField) statusField.value = assignmentData.status || 'active';
+                            
+                            // Log các trường đã điền
+                            console.log('Form filled with the following values:', {
+                                teacherId: teacherIdField?.value,
+                                subjectId: subjectIdField?.value,
+                                cohortId: cohortIdField?.value,
+                                timeSlot: timeSlotField?.value,
+                                status: statusField?.value
+                            });
+                        } catch (formError) {
+                            console.error('Error filling form fields:', formError);
+                        }
+                    } else {
+                        console.warn('API returned empty or null assignment data');
+                        this.showNotification('warning', 'Dữ liệu không đầy đủ', 'API trả về dữ liệu rỗng hoặc không đầy đủ.');
+                    }
+                } catch (error) {
+                    console.error('Error loading assignment data:', error);
+                    this.showNotification('error', 'Lỗi tải dữ liệu', 'Không thể tải thông tin phân công. Vui lòng thử lại sau.');
+                }
+            }
+        }
+        
+        // Mở modal
         this.openModal('assignmentModal');
     }
 
     async saveAssignment() {
-        const form = document.getElementById('assignmentForm');
-        const formData = new FormData(form);
-        const assignmentData = Object.fromEntries(formData.entries());
+        try {
+            const form = document.getElementById('assignmentForm');
+            const formData = new FormData(form);
+            const assignmentData = {};
+            
+            formData.forEach((value, key) => {
+                assignmentData[key] = value;
+            });
+            
+            assignmentData.assignmentId = assignmentData.assignmentId || null;
+            
+            // Mở popup xác nhận
+            this.showConfirmation(
+                'Xác nhận lưu phân công',
+                'Bạn có chắc chắn muốn lưu thông tin phân công này?',
+                async () => {
+                    try {
+                        const isUpdate = assignmentData.assignmentId ? true : false;
+                        
+                        // Gửi yêu cầu lưu
+                        await this.saveAssignmentRequest(assignmentData);
+                        
+                        // Đóng modal
+                        this.closeModal('assignmentModal');
+                        
+                        // Cập nhật danh sách phân công
+                        await this.loadAssignments();
+                        
+                        // Hiển thị thông báo thành công
+                        this.showNotification(
+                            'success',
+                            isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                            isUpdate ? 'Thông tin phân công đã được cập nhật.' : 'Phân công mới đã được thêm vào hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error saving assignment:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi lưu thông tin',
+                            'Đã xảy ra lỗi khi lưu thông tin phân công. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in saveAssignment:', error);
+        }
+    }
 
+    async saveAssignmentRequest(assignmentData) {
         const params = new URLSearchParams({
             id: assignmentData.assignmentId || "",
             teacherId: assignmentData.teacherId,
@@ -929,37 +1412,59 @@ class AdminDashboard {
 
         const method = isUpdating ? "PUT" : "POST";
 
-        try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' }
-            });
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} assignment`);
-
-            this.closeModal('assignmentModal');
-            await this.loadAssignments();
-        } catch (error) {
-            console.error(error);
-            alert("Có lỗi xảy ra khi lưu phân công. Vui lòng thử lại.");
-        }
+        if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} assignment`);
+        
+        return response.json();
     }
 
     async deleteAssignment(assignmentId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa phân công này?')) return;
-
         try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignment?id=${assignmentId}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) throw new Error('Failed to delete assignment');
-
-            await this.loadAssignments();
+            this.showConfirmation(
+                'Xác nhận xóa phân công',
+                'Bạn có chắc chắn muốn xóa phân công này không? Dữ liệu không thể khôi phục sau khi xóa.',
+                async () => {
+                    try {
+                        await this.deleteAssignmentRequest(assignmentId);
+                        await this.loadAssignments();
+                        this.showNotification(
+                            'success',
+                            'Xóa phân công thành công',
+                            'Phân công đã được xóa khỏi hệ thống.'
+                        );
+                    } catch (error) {
+                        console.error('Error deleting assignment:', error);
+                        this.showNotification(
+                            'error',
+                            'Lỗi xóa phân công',
+                            'Đã xảy ra lỗi khi xóa phân công. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
         } catch (error) {
-            console.error("Lỗi khi xóa phân công:", error);
-            alert("Không thể xóa phân công. Vui lòng thử lại.");
+            console.error('Error in deleteAssignment:', error);
         }
+    }
+
+    async deleteAssignmentRequest(assignmentId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignment?id=${assignmentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa phân công: ${response.status}`);
+        }
+        
+        return true;
     }
 
     searchAssignments(query) {
@@ -1129,6 +1634,235 @@ class AdminDashboard {
                 table.classList.remove('mobile-view');
             });
         }
+    }
+
+    // Thêm các phương thức xử lý popup xác nhận và thông báo
+
+    // Thêm các phương thức mới
+    setupPopupHandlers() {
+        // Thiết lập sự kiện đóng popup thông báo
+        const okButton = document.getElementById('okButton');
+        if (okButton) {
+            okButton.addEventListener('click', () => {
+                this.hideNotification();
+            });
+        }
+        
+        // Thiết lập sự kiện đóng popup xác nhận
+        const cancelButton = document.getElementById('cancelButton');
+        if (cancelButton) {
+            cancelButton.addEventListener('click', () => {
+                this.hideConfirmation();
+            });
+        }
+    }
+
+    /**
+     * Hiển thị popup xác nhận với callback
+     * @param {string} title - Tiêu đề popup
+     * @param {string} message - Nội dung xác nhận
+     * @param {Function} onConfirm - Hàm callback khi người dùng xác nhận
+     */
+    showConfirmation(title, message, onConfirm) {
+        const confirmTitle = document.getElementById('confirmTitle');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmButton = document.getElementById('confirmButton');
+        const confirmationPopup = document.getElementById('confirmationPopup');
+        
+        if (confirmTitle && confirmMessage && confirmButton && confirmationPopup) {
+            // Cập nhật nội dung
+            confirmTitle.textContent = title || 'Xác nhận thao tác';
+            confirmMessage.textContent = message || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
+            
+            // Xóa sự kiện click cũ
+            const newConfirmButton = confirmButton.cloneNode(true);
+            confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+            
+            // Thêm sự kiện click mới
+            newConfirmButton.addEventListener('click', () => {
+                this.hideConfirmation();
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+            
+            // Hiển thị popup
+            confirmationPopup.classList.add('show');
+        }
+    }
+
+    /**
+     * Ẩn popup xác nhận
+     */
+    hideConfirmation() {
+        const confirmationPopup = document.getElementById('confirmationPopup');
+        if (confirmationPopup) {
+            confirmationPopup.classList.remove('show');
+        }
+    }
+
+    /**
+     * Hiển thị popup thông báo
+     * @param {string} type - Loại thông báo: success, error, warning, info
+     * @param {string} title - Tiêu đề thông báo
+     * @param {string} message - Nội dung thông báo
+     * @param {Function} callback - Hàm callback khi đóng thông báo (optional)
+     */
+    showNotification(type, title, message, callback) {
+        const notificationIcon = document.getElementById('notificationIcon');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const okButton = document.getElementById('okButton');
+        const notificationPopup = document.getElementById('notificationPopup');
+        
+        if (notificationIcon && notificationTitle && notificationMessage && okButton && notificationPopup) {
+            // Cập nhật icon theo loại thông báo
+            notificationIcon.className = 'popup-icon ' + (type || 'success');
+            
+            // Cập nhật icon
+            const iconElement = notificationIcon.querySelector('i');
+            if (iconElement) {
+                switch(type) {
+                    case 'error':
+                        iconElement.className = 'fas fa-times-circle';
+                        break;
+                    case 'warning':
+                        iconElement.className = 'fas fa-exclamation-triangle';
+                        break;
+                    case 'info':
+                        iconElement.className = 'fas fa-info-circle';
+                        break;
+                    default: // success
+                        iconElement.className = 'fas fa-check-circle';
+                }
+            }
+            
+            // Cập nhật nội dung
+            notificationTitle.textContent = title || 'Thông báo';
+            notificationMessage.textContent = message || 'Thao tác đã hoàn tất.';
+            
+            // Xóa sự kiện click cũ
+            const newOkButton = okButton.cloneNode(true);
+            okButton.parentNode.replaceChild(newOkButton, okButton);
+            
+            // Thêm sự kiện click mới
+            newOkButton.addEventListener('click', () => {
+                this.hideNotification();
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            });
+            
+            // Hiển thị popup
+            notificationPopup.classList.add('show');
+        }
+    }
+
+    /**
+     * Ẩn popup thông báo
+     */
+    hideNotification() {
+        const notificationPopup = document.getElementById('notificationPopup');
+        if (notificationPopup) {
+            notificationPopup.classList.remove('show');
+        }
+    }
+
+    // Thêm phương thức saveStudentRequest
+    async saveStudentRequest(studentData) {
+        const params = new URLSearchParams({
+            id: studentData.studentId || "",  
+            FName: studentData.firstName,
+            LName: studentData.lastName,
+            email: studentData.email,
+            gender: studentData.gender,
+            address: studentData.address,
+            dob: studentData.dob,
+            phone: studentData.phone,
+            password: studentData.password,
+            cohortId: studentData.cohortId
+        });
+
+        const isUpdating = Boolean(studentData.studentId);
+        const url = isUpdating
+            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateStudent?${params}`
+            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertStudent?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} student`);
+        
+        return response.json();
+    }
+
+    // Thêm phương thức deleteStudentRequest 
+    async deleteStudentRequest(studentId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa học sinh: ${response.status}`);
+        }
+        
+        return true;
+    }
+
+    // Thêm phương thức saveTeacherRequest
+    async saveTeacherRequest(teacherData) {
+        const params = new URLSearchParams({
+            id: teacherData.teacherId || "",  
+            FName: teacherData.firstName,
+            LName: teacherData.lastName,
+            email: teacherData.email,
+            gender: teacherData.gender,
+            phone: teacherData.phone,        
+            address: teacherData.address,
+            dob: teacherData.dob,
+            password: teacherData.password,
+        });
+
+        const isUpdating = Boolean(teacherData.teacherId);
+        const url = isUpdating
+            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateTeacher?${params}`
+            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertTeacher?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} teacher`);
+        
+        return response.json();
+    }
+
+    // Thêm phương thức deleteTeacherRequest
+    async deleteTeacherRequest(teacherId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa giáo viên: ${response.status}`);
+        }
+        
+        return true;
     }
 }
 

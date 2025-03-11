@@ -86,6 +86,152 @@
                 display: none;
             }
         }
+        
+        /* Notification và Confirmation Popup Styles */
+        .popup-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .popup-container.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .popup {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 25px;
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .popup-container.show .popup {
+            transform: translateY(0);
+        }
+        
+        .popup-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .popup-icon.success {
+            color: #22c55e;
+        }
+        
+        .popup-icon.error {
+            color: #ef4444;
+        }
+        
+        .popup-icon.warning {
+            color: #f59e0b;
+        }
+        
+        .popup-icon.info {
+            color: #3b82f6;
+        }
+        
+        .popup-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+        
+        .popup-message {
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .popup-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .popup-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+        
+        .popup-btn-confirm {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .popup-btn-confirm:hover {
+            background-color: #2563eb;
+        }
+        
+        .popup-btn-cancel {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .popup-btn-cancel:hover {
+            background-color: #d1d5db;
+        }
+        
+        .popup-btn-ok {
+            background-color: #3b82f6;
+            color: white;
+            min-width: 100px;
+        }
+        
+        .popup-btn-ok:hover {
+            background-color: #2563eb;
+        }
+        
+        /* Animation for popup */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .popup {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        @media (max-width: 640px) {
+            .popup {
+                width: 90%;
+                padding: 20px;
+            }
+            
+            .popup-icon {
+                font-size: 36px;
+            }
+            
+            .popup-title {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +272,35 @@
                 </div>
             </div>
             <div id="pageContent"></div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Popup -->
+    <div class="popup-container" id="confirmationPopup">
+        <div class="popup">
+            <div class="popup-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="popup-title" id="confirmTitle">Xác nhận thao tác</h3>
+            <p class="popup-message" id="confirmMessage">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+            <div class="popup-actions">
+                <button class="popup-btn popup-btn-cancel" id="cancelButton">Hủy</button>
+                <button class="popup-btn popup-btn-confirm" id="confirmButton">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Popup -->
+    <div class="popup-container" id="notificationPopup">
+        <div class="popup">
+            <div class="popup-icon success" id="notificationIcon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="popup-title" id="notificationTitle">Thành công</h3>
+            <p class="popup-message" id="notificationMessage">Thao tác đã được thực hiện thành công!</p>
+            <div class="popup-actions">
+                <button class="popup-btn popup-btn-ok" id="okButton">OK</button>
+            </div>
         </div>
     </div>
 
