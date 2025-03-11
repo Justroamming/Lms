@@ -446,6 +446,9 @@ class AdminDashboard {
                             <button onclick="adminDashboard.deleteCohort('${co.cohortId}')" class="btn-delete">
                                 <i class="fas fa-trash"></i>
                             </button>
+                             <button onclick="adminDashboard.printStudentInfo('${co.cohortId}')" class="btn-print">
+                            <i class="fas fa-print"></i> Print
+                        </button>
                         </td>
                     </tr>
                 `;
@@ -455,6 +458,79 @@ class AdminDashboard {
             console.error("Lỗi khi load danh sách lớp:", error);
         }
     }
+
+    async printStudentInfo(cohortId) {
+        try {
+            const res = await fetch(`https://localhost:7231/RealAdmins/GetStudentsInCohort?id=${cohortId}`);
+            const students = await res.json();
+    
+            if (!Array.isArray(students) || students.length === 0) {
+                alert("Không có sinh viên nào trong lớp này!");
+                return;
+            }
+    
+            // Open a new tab
+            let newTab = window.open();
+    
+            // Define styles for better readability
+            let styles = `
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f4f4f4; }
+                </style>
+            `;
+    
+            // Generate HTML table with column headers
+            let tableContent = `
+                <h2>Danh sách sinh viên trong lớp</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Họ và Tên</th>
+                            <th>Giới tính</th>
+                            <th>Ngày sinh</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Địa chỉ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map((student, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${student.studentFullName}</td>
+                                <td>${student.studentGender}</td>
+                                <td>${student.studentDOB}</td>
+                                <td>${student.studentEmail}</td>
+                                <td>${student.studentPhone}</td>
+                                <td>${student.studentAddress}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    };
+                </script>
+            `;
+    
+            // Write content to new tab and trigger printing
+            newTab.document.write(`<html><head>${styles}</head><body>${tableContent}</body></html>`);
+            newTab.document.close(); // Ensure document is fully loaded
+    
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách sinh viên:", error);
+            alert("Không thể tải danh sách sinh viên!");
+        }
+    }
+    
+    
+    
+    
     
 
 
