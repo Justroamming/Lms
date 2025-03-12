@@ -8,6 +8,8 @@ Chào mừng bạn đến với **LMS (Hệ thống Quản lý Học tập)**! D
 1. Tải xuống mã nguồn.
 2. Mở dự án bằng live server.
 
+   => Hoặc các bạn có thể dùng link ở trên description tại về cơ bản trang đang được host với một số tính năng trên đấy rồi
+
 ## Note 
 - Đây chỉ là một bản folk cũ từ project trước đó, chưa có giao diện và UI chính xác tuy nhiên lại có đủ API và back-end để hoạt động một số chức năng cơ bản
 
