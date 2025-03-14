@@ -1123,12 +1123,12 @@ class AdminDashboard {
 
     async loadAssignments() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllAssignments');
+            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacherSchedule');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
-            const assignments = data.data || [];
+            const assignments = data || [];
 
             // Lấy thông tin giáo viên
             const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
@@ -1161,17 +1161,16 @@ class AdminDashboard {
                         <td>${teacher ? `${teacher.firstName} ${teacher.lastName}` : 'N/A'}</td>
                         <td>${subject ? subject.subjectName : 'N/A'}</td>
                         <td>${cohort ? cohort.cohortName : 'N/A'}</td>
-                        <td>${assignment.timeSlot || 'N/A'}</td>
+                        <td>${assignment.lessonDate || 'N/A'}</td>
+                        <td>${assignment.location || 'N/A'}</td>
+                        <td>${assignment.startTime  || 'N/A'}</td>
+                        <td>${assignment.endTime  || 'N/A'}</td>
+                        <td>${assignment.dayOfWeek|| 'N/A'}</td>
                         <td>
-                            <span class="status-badge ${assignment.status.toLowerCase()}">
-                                ${this.getStatusText(assignment.status)}
-                            </span>
-                        </td>
-                        <td>
-                            <button onclick="adminDashboard.openAssignmentModal('${assignment.assignmentId}')" class="btn-edit">
+                            <button onclick="adminDashboard.openAssignmentModal('${assignment.lessonClassId}')" class="btn-edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="adminDashboard.deleteAssignment('${assignment.assignmentId}')" class="btn-delete">
+                            <button onclick="adminDashboard.deleteAssignment('${assignment.lessonClassId}')" class="btn-delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -1244,224 +1243,82 @@ class AdminDashboard {
         });
     }
 
-    async openAssignmentModal(assignmentId = null) {
-        // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
-        const modalTitle = document.querySelector('#assignmentModal .modal-header h3');
-        if (modalTitle) {
-            modalTitle.textContent = assignmentId ? 'Chỉnh sửa phân công' : 'Thêm phân công mới';
-        }
-        
-        // Reset form
+    async openAssignmentModal(lessonClassId) {
+        const modal = document.getElementById('assignmentModal');
         const form = document.getElementById('assignmentForm');
-        if (form) {
+        console.log("Lesson Class ID:", lessonClassId);
+        if (lessonClassId) {
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetLessonSchedulebyID?id=${lessonClassId}`);
+            const assignmentArray = await response.json();
+            const assignment = assignmentArray[0]; // Access the first item in the array
+            console.log("Lesson Class ID:", assignment.lessonClassId);
+        
+            Object.keys(assignment).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) input.value = assignment[key];
+                console.log("Key:", key, "Value:", assignment[key]);
+            });
+        } else {
             form.reset();
-            
-            // Đặt ID phân công cho form
-            const assignmentIdField = form.querySelector('[name="assignmentId"]');
-            if (assignmentIdField) {
-                assignmentIdField.value = assignmentId || '';
-            }
-            
-            // Tải dữ liệu cho các dropdown trước
-            await this.loadAssignmentFormData();
-            
-            // Nếu có ID phân công, tải thông tin phân công từ API
-            if (assignmentId) {
-                try {
-                    // Hiển thị thông báo đang tải
-                    this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
-                    
-                    // Gọi API để lấy thông tin phân công
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetAssignmentById?id=${assignmentId}`);
-                    
-                    // Ẩn thông báo đang tải
-                    this.hideNotification();
-                    
-                    if (!response.ok) {
-                        throw new Error('Không thể tải thông tin phân công');
-                    }
-                    
-                    const assignment = await response.json();
-                    console.log('Assignment data from API:', assignment);
-                    
-                    // Điền thông tin phân công vào form
-                    if (assignment) {
-                        // Xử lý các trường hợp khác nhau của API
-                        const assignmentData = assignment.data || assignment;
-                        
-                        // Log dữ liệu để kiểm tra
-                        console.log('Assignment data to fill form:', assignmentData);
-                        
-                        try {
-                            // Form fields
-                            const teacherIdField = form.querySelector('[name="teacherId"]');
-                            const subjectIdField = form.querySelector('[name="subjectId"]');
-                            const cohortIdField = form.querySelector('[name="cohortId"]');
-                            const timeSlotField = form.querySelector('[name="timeSlot"]');
-                            const statusField = form.querySelector('[name="status"]');
-                            
-                            // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
-                            if (teacherIdField) {
-                                const teacherId = assignmentData.teacherId || '';
-                                teacherIdField.value = teacherId;
-                            }
-                            
-                            if (subjectIdField) {
-                                const subjectId = assignmentData.subjectId || '';
-                                subjectIdField.value = subjectId;
-                            }
-                            
-                            if (cohortIdField) {
-                                const cohortId = assignmentData.cohortId || '';
-                                cohortIdField.value = cohortId;
-                            }
-                            
-                            if (timeSlotField) timeSlotField.value = assignmentData.timeSlot || '';
-                            if (statusField) statusField.value = assignmentData.status || 'active';
-                            
-                            // Log các trường đã điền
-                            console.log('Form filled with the following values:', {
-                                teacherId: teacherIdField?.value,
-                                subjectId: subjectIdField?.value,
-                                cohortId: cohortIdField?.value,
-                                timeSlot: timeSlotField?.value,
-                                status: statusField?.value
-                            });
-                        } catch (formError) {
-                            console.error('Error filling form fields:', formError);
-                        }
-                    } else {
-                        console.warn('API returned empty or null assignment data');
-                        this.showNotification('warning', 'Dữ liệu không đầy đủ', 'API trả về dữ liệu rỗng hoặc không đầy đủ.');
-                    }
-                } catch (error) {
-                    console.error('Error loading assignment data:', error);
-                    this.showNotification('error', 'Lỗi tải dữ liệu', 'Không thể tải thông tin phân công. Vui lòng thử lại sau.');
-                }
-            }
         }
         
-        // Mở modal
         this.openModal('assignmentModal');
     }
 
     async saveAssignment() {
-        try {
-            const form = document.getElementById('assignmentForm');
-            const formData = new FormData(form);
-            const assignmentData = {};
-            
-            formData.forEach((value, key) => {
-                assignmentData[key] = value;
-            });
-            
-            assignmentData.assignmentId = assignmentData.assignmentId || null;
-            
-            // Mở popup xác nhận
-            this.showConfirmation(
-                'Xác nhận lưu phân công',
-                'Bạn có chắc chắn muốn lưu thông tin phân công này?',
-                async () => {
-                    try {
-                        const isUpdate = assignmentData.assignmentId ? true : false;
-                        
-                        // Gửi yêu cầu lưu
-                        await this.saveAssignmentRequest(assignmentData);
-                        
-                        // Đóng modal
-                        this.closeModal('assignmentModal');
-                        
-                        // Cập nhật danh sách phân công
-                        await this.loadAssignments();
-                        
-                        // Hiển thị thông báo thành công
-                        this.showNotification(
-                            'success',
-                            isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
-                            isUpdate ? 'Thông tin phân công đã được cập nhật.' : 'Phân công mới đã được thêm vào hệ thống.'
-                        );
-                    } catch (error) {
-                        console.error('Error saving assignment:', error);
-                        this.showNotification(
-                            'error',
-                            'Lỗi lưu thông tin',
-                            'Đã xảy ra lỗi khi lưu thông tin phân công. Vui lòng thử lại sau.'
-                        );
-                    }
-                }
-            );
-        } catch (error) {
-            console.error('Error in saveAssignment:', error);
-        }
-    }
-
-    async saveAssignmentRequest(assignmentData) {
+        const form = document.getElementById('assignmentForm');
+        const formData = new FormData(form);
+        const assignmentData = Object.fromEntries(formData.entries());
+        console.log("Form Data:", assignmentData);
+    
+        const isUpdating = assignmentData.lessonClassId && assignmentData.lessonClassId.trim() !== "";
         const params = new URLSearchParams({
-            id: assignmentData.assignmentId || "",
+            lessonClassID: assignmentData.lessonClassId || "",
             teacherId: assignmentData.teacherId,
             subjectId: assignmentData.subjectId,
-            cohortId: assignmentData.cohortId,
-            timeSlot: assignmentData.timeSlot,
-            status: assignmentData.status
+            lessondate: assignmentData.startDay,
+            location: assignmentData.location,
+            startTime: assignmentData.startTime,
+            endTime: assignmentData.endTime,
+            cohortId: assignmentData.cohortId
         });
-
-        const isUpdating = Boolean(assignmentData.assignmentId);
+    
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateAssignment?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertAssignment?${params}`;
-
+            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateAssignedTeacher?${params}`
+            : `https://scoreapi-1zqy.onrender.com/RealAdmins/AssignTeacher?${params}`;
+    
         const method = isUpdating ? "PUT" : "POST";
-
-        const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} assignment`);
-        
-        return response.json();
-    }
-
-    async deleteAssignment(assignmentId) {
+    
         try {
-            this.showConfirmation(
-                'Xác nhận xóa phân công',
-                'Bạn có chắc chắn muốn xóa phân công này không? Dữ liệu không thể khôi phục sau khi xóa.',
-                async () => {
-                    try {
-                        await this.deleteAssignmentRequest(assignmentId);
-                        await this.loadAssignments();
-                        this.showNotification(
-                            'success',
-                            'Xóa phân công thành công',
-                            'Phân công đã được xóa khỏi hệ thống.'
-                        );
-                    } catch (error) {
-                        console.error('Error deleting assignment:', error);
-                        this.showNotification(
-                            'error',
-                            'Lỗi xóa phân công',
-                            'Đã xảy ra lỗi khi xóa phân công. Vui lòng thử lại sau.'
-                        );
-                    }
-                }
-            );
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            });
+    
+            if (!response.ok) throw new Error(`Failed to ${isUpdating ? "update" : "create"} assignment`);
+    
+            this.closeModal('assignmentModal');
+            await this.loadAssignments();
         } catch (error) {
-            console.error('Error in deleteAssignment:', error);
+            console.error(error);
+            alert("Có lỗi xảy ra khi lưu phân công. Vui lòng thử lại.");
         }
     }
 
-    async deleteAssignmentRequest(assignmentId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignment?id=${assignmentId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+    async deleteAssignment(lessonClassId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa phân công này?')) return;
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa phân công: ${response.status}`);
+        try {
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignedTeacher?lessonClassID=${lessonClassId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Failed to delete assignment');
+
+            await this.loadAssignments();
+        } catch (error) {
+            console.error("Lỗi khi xóa phân công:", error);
+            alert("Không thể xóa phân công. Vui lòng thử lại.");
         }
         
         return true;
@@ -1481,13 +1338,13 @@ class AdminDashboard {
     }
 
     async loadAccounts() {
-        const teachersResponse = await fetch('https://localhost:7112/Teacher/GetAllTeacher');
+        const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/Teacher/GetAllTeacher');
         const teachersData = await teachersResponse.json();
         const teachers = teachersData.data || [];
-        const studentsResponse = await fetch('https://localhost:7112/Student/GetAllStudents');
+        const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Student/GetAllStudents');
         const studentsData = await studentsResponse.json();
         const students = studentsData.data || [];
-        const adminsResponse = await fetch('https://localhost:7112/Admin/GetAllAdmins');
+        const adminsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Admin/GetAllAdmins');
         const adminsData = await adminsResponse.json();
         const admins = adminsData.data || [];
         

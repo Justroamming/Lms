@@ -21,7 +21,7 @@ class TeacherDashboard {
             const headerElement = document.getElementById('teacherName');
             
             if (welcomeElement) {
-                welcomeElement.textContent ="Xin chào "+ teacherData.lastName +" "+ teacherData.firstName || 'Giáo viên';
+                welcomeElement.textContent = teacherData.lastName +" "+ teacherData.firstName || 'Giáo viên';
             }
             if (headerElement) {
                 headerElement.textContent =  teacherData.lastName +" " +teacherData.firstName  || 'Giáo viên';

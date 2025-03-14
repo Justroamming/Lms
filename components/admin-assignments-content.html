@@ -19,9 +19,13 @@
                     <tr>
                         <th>Giáo viên</th>
                         <th>Môn học</th>
-                        <th>Lớp</th>
-                        <th>Thời gian</th>
-                        <th>Trạng thái</th>
+                        <th>Lớp học</th>
+                        <th>Ngày bắt đầu dạy</th>
+                        <th>Phòng dạy</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th>Thứ</th>
+            
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -40,7 +44,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="assignmentForm">
-                        <input type="hidden" name="assignmentId">
+                        <input type="hidden" name="lessonClassId">
                         <div class="form-group">
                             <label>Giáo viên</label>
                             <select name="teacherId" required>
@@ -50,27 +54,36 @@
                         <div class="form-group">
                             <label>Môn học</label>
                             <select name="subjectId" required>
+                          
                                 <!-- Options sẽ được thêm động từ JS -->
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Lớp</label>
+                            <label>Lớp học</label>
                             <select name="cohortId" required>
+                          
                                 <!-- Options sẽ được thêm động từ JS -->
                             </select>
+                        </div>    
+                      
+                        <div class="form-group">
+                            <label>Ngày bắt đầu dạy </label>
+                            <input type="date" name="startDay" required >
                         </div>
                         <div class="form-group">
-                            <label>Thời gian</label>
-                            <input type="text" name="timeSlot" required placeholder="VD: Thứ 2 (Tiết 1-3)">
+                            <label>Phòng dạy</label>
+                            <input type="text" name="location" required placeholder="VD: Phòng 101">
                         </div>
                         <div class="form-group">
-                            <label>Trạng thái</label>
-                            <select name="status" required>
-                                <option value="active">Đang hoạt động</option>
-                                <option value="pending">Chờ xử lý</option>
-                                <option value="completed">Đã hoàn thành</option>
-                            </select>
+                            <label>Thời gian bắt đầu </label>
+                            <input type="time" name="startTime" required placeholder="HH:MM:SS" step="1"`>
                         </div>
+                        <div class="form-group">
+                            <label>Thời gian kết thúc</label>
+                            <input type="time" name="endTime" required placeholder="HH:MM:SS" step="1">
+                        </div>
+                     
+                       
                     </form>
                 </div>
                 <div class="modal-footer">
