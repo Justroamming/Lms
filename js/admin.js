@@ -101,13 +101,13 @@ class AdminDashboard {
     async initializeStudentDistributionChart() {
         try {
             // Lấy dữ liệu lớp học và số lượng học sinh
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
             // Lấy số lượng học sinh cho mỗi lớp
             const studentCounts = await Promise.all(cohorts.map(async (cohort) => {
-                const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
                 const data = await response.json();
                 return data[0]?.numOfStudents || 0;
             }));
@@ -187,7 +187,7 @@ class AdminDashboard {
     async updateQuickStats() {
         try {
             // Lấy tất cả học sinh
-            const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             const studentsData = await studentsResponse.json();
             const students = studentsData.data || [];
 
@@ -199,13 +199,13 @@ class AdminDashboard {
             document.getElementById('genderRatio').textContent = `${malePercent}% / ${femalePercent}%`;
 
             // Lấy thông tin về lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
             // Lấy số lượng học sinh cho mỗi lớp
             const cohortStats = await Promise.all(cohorts.map(async (cohort) => {
-                const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
                 const data = await response.json();
                 return {
                     name: cohort.cohortName,
@@ -233,7 +233,7 @@ class AdminDashboard {
     }
 
     async loadCohortsForSelect() {
-        const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+        const response = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
         const data = await response.json();
         const cohorts = data.data || [];
     
@@ -245,7 +245,7 @@ class AdminDashboard {
     
     async loadStudents() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -257,7 +257,7 @@ class AdminDashboard {
     
             console.log("Parsed students:", students); 
     
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data; 
             console.log("API Cohorts Response:", cohorts); 
@@ -338,7 +338,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin học sinh
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentById?id=${studentId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetStudentById?id=${studentId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -523,7 +523,7 @@ class AdminDashboard {
 
     async loadTeachers() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -601,7 +601,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin giáo viên
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetTeacherById?id=${teacherId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetTeacherById?id=${teacherId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -773,7 +773,7 @@ class AdminDashboard {
 
     async  loadCohorts() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const data = await response.json();
             console.log("API Cohorts Response:", data);
     
@@ -787,7 +787,7 @@ class AdminDashboard {
             // Get student counts for each cohort
             const studentCounts = await Promise.all(cohorts.map(async (co) => {
                 try {
-                    const res = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${co.cohortId}`);
+                    const res = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${co.cohortId}`);
                     const countData = await res.json();
                     
                     if (Array.isArray(countData) && countData.length > 0) {
@@ -831,7 +831,7 @@ class AdminDashboard {
 
     async printStudentInfo(cohortId) {
         try {
-            const res = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentsInCohort?id=${cohortId}`);
+            const res = await fetch(`https://localhost:7231/RealAdmins/GetStudentsInCohort?id=${cohortId}`);
             const students = await res.json();
     
             if (!Array.isArray(students) || students.length === 0) {
@@ -940,7 +940,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin lớp học
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetCohortById?id=${cohortId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetCohortById?id=${cohortId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -1051,8 +1051,8 @@ class AdminDashboard {
 
         const isUpdating = Boolean(cohortData.cohortId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateCohort?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertCohort?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateCohort?${params}`
+            : `https://localhost:7231/RealAdmins/InsertCohort?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1096,7 +1096,7 @@ class AdminDashboard {
     }
 
     async deleteCohortRequest(cohortId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteCohort?id=${cohortId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteCohort?id=${cohortId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -1131,17 +1131,17 @@ class AdminDashboard {
             const assignments = data || [];
 
             // Lấy thông tin giáo viên
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
 
             // Lấy thông tin môn học
-            const subjectsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
             const subjectsData = await subjectsResponse.json();
             const subjects = subjectsData.data || [];
 
             // Lấy thông tin lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
@@ -1194,7 +1194,7 @@ class AdminDashboard {
     async loadAssignmentFormData() {
         try {
             // Load danh sách giáo viên
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
             
@@ -1204,7 +1204,7 @@ class AdminDashboard {
             ).join('');
 
             // Load danh sách môn học
-            const subjectsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
             const subjectsData = await subjectsResponse.json();
             const subjects = subjectsData.data || [];
             
@@ -1214,7 +1214,7 @@ class AdminDashboard {
             ).join('');
 
             // Load danh sách lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
             
@@ -1376,15 +1376,15 @@ class AdminDashboard {
     
     async  getSystemStats() {   
         try {
-            const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             const studentsData = await studentsResponse.json();
             const students = studentsData.data || [];
             
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
 
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
     
@@ -1642,8 +1642,8 @@ class AdminDashboard {
 
         const isUpdating = Boolean(studentData.studentId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateStudent?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertStudent?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateStudent?${params}`
+            : `https://localhost:7231/RealAdmins/InsertStudent?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1659,7 +1659,7 @@ class AdminDashboard {
 
     // Thêm phương thức deleteStudentRequest 
     async deleteStudentRequest(studentId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteStudent?id=${studentId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -1690,8 +1690,8 @@ class AdminDashboard {
 
         const isUpdating = Boolean(teacherData.teacherId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateTeacher?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertTeacher?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateTeacher?${params}`
+            : `https://localhost:7231/RealAdmins/InsertTeacher?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1707,7 +1707,7 @@ class AdminDashboard {
 
     // Thêm phương thức deleteTeacherRequest
     async deleteTeacherRequest(teacherId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteTeacher?id=${teacherId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

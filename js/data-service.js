@@ -8,15 +8,15 @@ class DataService {
     async fetchDashboardData() {
         try {
             // Fetch teacher data from API
-            const teacherResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
+            const teacherResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
             const teacher = await teacherResponse.json();
             const teacherData = teacher.data;
 
             // Fetch students and scores data from API
-            const studentsResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherStudentsInfo?id=${this.teacher.teacherId}`);
+            const studentsResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherStudentsInfo?id=${this.teacher.teacherId}`);
             const students = await studentsResponse.json();
 
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherGradesStudentsScore?id=${this.teacher.teacherId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherGradesStudentsScore?id=${this.teacher.teacherId}`);
             const scores = await scoresResponse.json();
 
             // Tính toán thống kê
@@ -113,7 +113,7 @@ class DataService {
 
     async getStudentData(studentId) {
         try {
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
             const studentScores = await scoresResponse.json();
             
             return {
@@ -136,7 +136,7 @@ class DataService {
 
     async getStudentStats(studentId) {
         try {
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
             const studentScores = await scoresResponse.json();
             
             // Tính điểm trung bình
