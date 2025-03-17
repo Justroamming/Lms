@@ -25,11 +25,12 @@ class TeacherNavigation {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const content = await response.text();
-            const mainContent = document.querySelector('main.dashboard');
+            const mainContent = document.querySelector('#pageContent');
             if (mainContent) {
                 mainContent.innerHTML = content;
                 this.initializeComponent(page);
                 this.updateActiveLink(page);
+                this.currentPage = page;
             } else {
                 console.error('Main content container not found');
             }
@@ -45,7 +46,11 @@ class TeacherNavigation {
                 new TeacherDashboard();
                 break;
             case 'scores':
-                new TeacherScores();
+                // Không cần khởi tạo lại vì đã có biến scoreManager toàn cục
+                if (window.scoreManager) {
+                    window.scoreManager.loadScores();
+                    window.scoreManager.loadStudentsForScoring();
+                }
                 break;
             case 'schedule':
                 new TeacherSchedule();
@@ -53,7 +58,6 @@ class TeacherNavigation {
             case 'profile':
                 new TeacherProfile();
                 break;
-          
         }
     }
 
@@ -66,6 +70,12 @@ class TeacherNavigation {
         if (activeLink) {
             activeLink.parentElement.classList.add('active');
         }
+    }
+
+    // Phương thức để làm mới tất cả các trang
+    refreshAllPages() {
+        // Tải lại trang hiện tại
+        this.loadPage(this.currentPage);
     }
 }
 

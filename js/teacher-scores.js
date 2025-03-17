@@ -1,6 +1,6 @@
 class TeacherScores {
     constructor() {
-        this.apiBaseUrl = 'https://your-api-url.com'; // Replace with your API base URL
+        this.apiBaseUrl = 'https://scoreapi-1zqy.onrender.com'; // Replace with your API base URL
         this.setupEventListeners();
         this.loadStudentsForScoring();
         this.loadScores();
@@ -158,8 +158,27 @@ class TeacherScores {
         }
     }
 
+    openAddScoreModal() {
+        const modal = document.getElementById('scoreModal');
+        if (modal) {
+            document.getElementById('modalTitle').textContent = 'Thêm Điểm Mới';
+            document.getElementById('scoreId').value = '';
+            document.getElementById('scoreForm').reset();
+            document.getElementById('scoreDate').valueAsDate = new Date();
+            modal.style.display = 'block';
+        }
+    }
+
+    editScore(scoreId) {
+        // Implement edit score functionality
+        console.log('Edit score:', scoreId);
+    }
+
     closeModal() {
-        document.getElementById('scoreModal').style.display = 'none';
+        const modal = document.getElementById('scoreModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     validateScore(score) {
@@ -167,8 +186,11 @@ class TeacherScores {
     }
 }
 
+// Khởi tạo đối tượng scoreManager toàn cục
+let scoreManager;
 
 document.addEventListener('DOMContentLoaded', () => {
-    TeacherScores = new  TeacherScores();
-    window. TeacherScores = TeacherScores;
+    // Khởi tạo đúng cách
+    scoreManager = new TeacherScores();
+    window.scoreManager = scoreManager;
 });
