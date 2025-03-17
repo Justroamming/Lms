@@ -23,10 +23,10 @@ const initializeData = async () => {
         console.log("Fetching user data...");
 
         const [admins, teachers, students, scores] = await Promise.all([
-            fetchData('https://localhost:7231/Auths/GetAllAdmins'),
-            fetchData('https://localhost:7231/Auths/GetAllTeachers'),
-            fetchData('https://localhost:7231/Auths/GetAllStudents'),
-            fetchData('https://localhost:7231/Auths/GetAllGrades')
+            fetchData('https://scoreapi-1zqy.onrender.com/Auths/GetAllAdmins'),
+            fetchData('https://scoreapi-1zqy.onrender.com/Auths/GetAllTeachers'),
+            fetchData('https://scoreapi-1zqy.onrender.com/Auths/GetAllStudents'),
+            fetchData('https://scoreapi-1zqy.onrender.com/Auths/GetAllGrades')
         ]);
 
         window.admins = admins || [];

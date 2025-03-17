@@ -151,7 +151,7 @@ class TeacherProfile  {
         }
     
         try {
-            const response = await fetch(`https://localhost:7231/ProfileTeachers/UpdateTeacherPassword?id=${this.teacher.teacherId || ""}&password=${confirmPassword}`, {
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileTeachers/UpdateTeacherPassword?id=${this.teacher.teacherId || ""}&password=${confirmPassword}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -261,7 +261,7 @@ class TeacherProfile  {
    
 
     async validatePassword(current, newPass, confirm) {
-        const teacherresponse = await fetch(`https://localhost:7231/ProfileTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
+        const teacherresponse = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
         const teacher = await teacherresponse.json();
         const teacherdata=teacher.data
         if (current !== teacherdata.password) {

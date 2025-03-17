@@ -78,7 +78,7 @@ class StudentScores {
     async loadScores() {
         try {
             // Note: Adjust the URL if needed based on your API endpoint.
-            const response = await fetch(`https://localhost:7231/ScoreStudentss/GetAllGradesOfAStudent?id=${this.student.studentId}`);
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScoreStudentss/GetAllGradesOfAStudent?id=${this.student.studentId}`);
             const scores = await response.json();
             this.allScores = scores;
 
