@@ -1286,6 +1286,7 @@ class AdminDashboard {
         const url = isUpdating
             ? `https://localhost:7231/RealAdmins/UpdateAssignedTeacher?${params}`
             : `https://localhost:7231/RealAdmins/AssignTeacher?${params}`;
+
     
         const method = isUpdating ? "PUT" : "POST";
     
@@ -1338,13 +1339,13 @@ class AdminDashboard {
     }
 
     async loadAccounts() {
-        const teachersResponse = await fetch('https://localhost:7112/Teacher/GetAllTeacher');
+        const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/Teacher/GetAllTeacher');
         const teachersData = await teachersResponse.json();
         const teachers = teachersData.data || [];
-        const studentsResponse = await fetch('https://localhost:7112/Student/GetAllStudents');
+        const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Student/GetAllStudents');
         const studentsData = await studentsResponse.json();
         const students = studentsData.data || [];
-        const adminsResponse = await fetch('https://localhost:7112/Admin/GetAllAdmins');
+        const adminsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Admin/GetAllAdmins');
         const adminsData = await adminsResponse.json();
         const admins = adminsData.data || [];
         
