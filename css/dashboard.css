@@ -5,11 +5,48 @@
 }
 
 body {
-    font-family: 'Arial', sans-serif;
-    background: #f5f6fa;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f3f4f6;
+    color: #333;
+    line-height: 1.6;
+    max-width: 100%;
+    overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+.container {
+    width: 100%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    margin-right: auto;
+    margin-left: auto;
+    box-sizing: border-box;
+}
+
+/* Grid System */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -0.5rem;
+    margin-left: -0.5rem;
+}
+
+.col {
+    flex: 1 0 0%;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* For dashboard charts and summary panels */
+.dashboard-panel {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1rem;
 }
 
 /* Header Styles */

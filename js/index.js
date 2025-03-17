@@ -1,5 +1,5 @@
 document.querySelector('.cta-button').addEventListener('click', () => {
-    alert('Welcome to Student Score Management!');
+    window.location.href = 'login.html';
 });
 
 // Function to fetch system stats

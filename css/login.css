@@ -722,6 +722,14 @@ select option {
     animation: float 22s infinite ease-in-out;
     animation-delay: 3s;
 }
+.Backhome{
+    text-decoration: none;
+    color: black;
+    font-size: 14px;
+    margin-top: 10px;
+    display: block;
+    text-align: center;
+}
 
 /* Thêm hiệu ứng nhấp nháy cho form */
 @keyframes glowAnimation {

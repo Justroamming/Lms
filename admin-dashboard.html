@@ -9,227 +9,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Responsive styles for mobile */
-        @media (max-width: 768px) {
-            .dashboard {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                position: fixed;
-                left: -250px;
-                top: 0;
-                height: 100%;
-                z-index: 1000;
-                transition: left 0.3s ease;
-                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            }
-            
-            .sidebar.open {
-                left: 0;
-            }
-            
-            .main-content {
-                width: 100%;
-                margin-left: 0;
-            }
-            
-            .topbar {
-                justify-content: space-between;
-                padding: 10px 15px;
-            }
-            
-            .menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: none;
-                border: none;
-                color: #333;
-                font-size: 24px;
-                cursor: pointer;
-            }
-            
-            .overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 999;
-            }
-            
-            .overlay.active {
-                display: block;
-            }
-            
-            /* Adjust tables for mobile */
-            .table-container {
-                overflow-x: auto;
-            }
-            
-            /* Adjust cards for mobile */
-            .stats-grid, .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            /* Adjust forms for mobile */
-            .modal-dialog {
-                width: 95%;
-                max-width: 95%;
-            }
-            
-            /* Ẩn text trên nút đăng xuất, chỉ hiện icon */
-            .btn-logout span {
-                display: none;
-            }
-        }
-        
-        /* Notification và Confirmation Popup Styles */
-        .popup-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        
-        .popup-container.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .popup {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            padding: 25px;
-            text-align: center;
-            transform: translateY(-20px);
-            transition: transform 0.3s ease;
-        }
-        
-        .popup-container.show .popup {
-            transform: translateY(0);
-        }
-        
-        .popup-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        .popup-icon.success {
-            color: #22c55e;
-        }
-        
-        .popup-icon.error {
-            color: #ef4444;
-        }
-        
-        .popup-icon.warning {
-            color: #f59e0b;
-        }
-        
-        .popup-icon.info {
-            color: #3b82f6;
-        }
-        
-        .popup-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #1f2937;
-        }
-        
-        .popup-message {
-            color: #6b7280;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        
-        .popup-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .popup-btn {
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-        }
-        
-        .popup-btn-confirm {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .popup-btn-confirm:hover {
-            background-color: #2563eb;
-        }
-        
-        .popup-btn-cancel {
-            background-color: #e5e7eb;
-            color: #4b5563;
-        }
-        
-        .popup-btn-cancel:hover {
-            background-color: #d1d5db;
-        }
-        
-        .popup-btn-ok {
-            background-color: #3b82f6;
-            color: white;
-            min-width: 100px;
-        }
-        
-        .popup-btn-ok:hover {
-            background-color: #2563eb;
-        }
-        
-        /* Animation for popup */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .popup {
-            animation: fadeInUp 0.3s ease-out;
-        }
-        
         @media (max-width: 640px) {
             .popup {
                 width: 90%;
-                padding: 20px;
+                padding: 1rem;
             }
             
             .popup-icon {
-                font-size: 36px;
+                font-size: 2rem;
             }
             
             .popup-title {
-                font-size: 18px;
+                font-size: 1.125rem;
             }
         }
     </style>
@@ -253,6 +44,9 @@
                 </li>
                 <li data-page="cohorts">
                     <i class="fas fa-school"></i> Quản lý lớp học
+                </li>
+                <li data-page="subjects">
+                    <i class="fas fa-book"></i> Quản lý môn học
                 </li>
                 <li data-page="assignments">
                     <i class="fas fa-tasks"></i> Phân công giảng dạy
@@ -281,8 +75,8 @@
             <div class="popup-icon warning">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h3 class="popup-title" id="confirmTitle">Xác nhận thao tác</h3>
-            <p class="popup-message" id="confirmMessage">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+            <h3 class="popup-title">Xác nhận</h3>
+            <p class="popup-message" id="confirmationMessage">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
             <div class="popup-actions">
                 <button class="popup-btn popup-btn-cancel" id="cancelButton">Hủy</button>
                 <button class="popup-btn popup-btn-confirm" id="confirmButton">Xác nhận</button>
@@ -296,7 +90,6 @@
             <div class="popup-icon success" id="notificationIcon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h3 class="popup-title" id="notificationTitle">Thành công</h3>
             <p class="popup-message" id="notificationMessage">Thao tác đã được thực hiện thành công!</p>
             <div class="popup-actions">
                 <button class="popup-btn popup-btn-ok" id="okButton">OK</button>
@@ -354,7 +147,93 @@
                     overlay.classList.remove('active');
                 }
             });
+            
+            // Cập nhật popup handlers
+            const confirmationPopup = document.getElementById('confirmationPopup');
+            const confirmBtn = document.getElementById('confirmButton');
+            const cancelBtn = document.getElementById('cancelButton');
+            const okBtn = document.getElementById('okButton');
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => {
+                    confirmationPopup.classList.remove('active');
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    confirmationPopup.classList.remove('active');
+                });
+            }
+            
+            if (okBtn) {
+                okBtn.addEventListener('click', () => {
+                    const notificationPopup = document.getElementById('notificationPopup');
+                    if (notificationPopup) {
+                        notificationPopup.classList.remove('active');
+                    }
+                });
+            }
         });
+        
+        // Hiển thị notification
+        function showNotification(message, type = 'info') {
+            const notificationPopup = document.getElementById('notificationPopup');
+            const notificationIcon = document.getElementById('notificationIcon');
+            const notificationMessage = document.getElementById('notificationMessage');
+            
+            // Set icon based on type
+            notificationIcon.className = 'popup-icon';
+            switch(type) {
+                case 'success':
+                    notificationIcon.classList.add('success');
+                    notificationIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    break;
+                case 'error':
+                    notificationIcon.classList.add('error');
+                    notificationIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                    break;
+                case 'warning':
+                    notificationIcon.classList.add('warning');
+                    notificationIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    break;
+                default:
+                    notificationIcon.classList.add('info');
+                    notificationIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            notificationMessage.textContent = message;
+            notificationPopup.classList.add('active');
+            
+            // Auto hide after 3 seconds for success and info
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    notificationPopup.classList.remove('active');
+                }, 3000);
+            }
+        }
+        
+        // Hiển thị confirmation dialog
+        function showConfirmation(message, onConfirm) {
+            const confirmationPopup = document.getElementById('confirmationPopup');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            const confirmButton = document.getElementById('confirmButton');
+            
+            confirmationMessage.textContent = message;
+            confirmationPopup.classList.add('active');
+            
+            // Remove previous event listeners
+            const newConfirmBtn = confirmButton.cloneNode(true);
+            confirmButton.parentNode.replaceChild(newConfirmBtn, confirmButton);
+            
+            // Add new event listener
+            newConfirmBtn.addEventListener('click', () => {
+                confirmationPopup.classList.remove('active');
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+        }
         
         // Hàm đăng xuất
         function logout() {
