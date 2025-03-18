@@ -175,7 +175,7 @@ class TeacherSchedule {
           let scheduleData;
           
           try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
+            const response = await fetch(`https://localhost:7231/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
             if (!response.ok) {
               throw new Error('Network response was not ok');
             }

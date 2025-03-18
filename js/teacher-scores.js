@@ -1,6 +1,6 @@
 class TeacherScores {
     constructor() {
-        this.apiBaseUrl = 'https://scoreapi-1zqy.onrender.com'; // Replace with your API base URL
+        this.apiBaseUrl = 'https://localhost:7231'; // Replace with your API base URL
         this.setupEventListeners();
         this.loadStudentsForScoring();
         this.loadScores();
