@@ -38,6 +38,9 @@ class AdminDashboard {
         
         // Xử lý hiển thị trang
         this.initPageHandlers();
+
+        // Explicitly set this as a global variable
+        window.adminDashboard = this;
     }
 
     initializeNavigation() {
@@ -307,20 +310,41 @@ class AdminDashboard {
                     <td>${student.password}</td>
                     <td>${cohort ? cohortName: 'N/A'}</td>
                     <td>
-                        <button onclick="adminDashboard.openStudentModal('${student.studentId}')" class="btn-edit" data-id="${student.studentId}">
+                        <button class="btn-edit" data-action="edit-student" data-id="${student.studentId}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="adminDashboard.deleteStudent('${student.studentId}')" class="btn-delete" data-id="${student.studentId}">
+                        <button class="btn-delete" data-action="delete-student" data-id="${student.studentId}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `}).join('');
+            
+            // Add event listeners to dynamically created buttons
+            this.attachStudentActionHandlers();
         } catch (error) {
             console.error("Error loading students:", error);
         }
     }
     
+    attachStudentActionHandlers() {
+        const studentTable = document.getElementById('studentTable');
+        if (!studentTable) return;
+        
+        studentTable.addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            const id = target.dataset.id;
+            
+            if (action === 'edit-student') {
+                this.openStudentModal(id);
+            } else if (action === 'delete-student') {
+                this.deleteStudent(id);
+            }
+        });
+    }
 
     setupStudentEventListeners() {
         document.getElementById('addStudentBtn')?.addEventListener('click', () => {
@@ -573,20 +597,40 @@ class AdminDashboard {
                     <td>${teacher.password}</td>
                    
                     <td>
-                        <button onclick="adminDashboard.openTeacherModal('${teacher.teacherId}')" class="btn-edit" data-id="${teacher.teacherId}">
+                        <button class="btn-edit" data-action="edit-teacher" data-id="${teacher.teacherId}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="adminDashboard.deleteTeacher('${teacher.teacherId}')" class="btn-delete" data-id="${teacher.teacherId}">
+                        <button class="btn-delete" data-action="delete-teacher" data-id="${teacher.teacherId}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+            
+            this.attachTeacherActionHandlers();
         } catch (error) {
             console.error("Error loading teachers:", error);
         }
     }
     
+    attachTeacherActionHandlers() {
+        const teacherTable = document.getElementById('teacherTable');
+        if (!teacherTable) return;
+        
+        teacherTable.addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            const id = target.dataset.id;
+            
+            if (action === 'edit-teacher') {
+                this.openTeacherModal(id);
+            } else if (action === 'delete-teacher') {
+                this.deleteTeacher(id);
+            }
+        });
+    }
 
     setupTeacherEventListeners() {
         document.getElementById('addTeacherBtn')?.addEventListener('click', () => {
@@ -1383,6 +1427,8 @@ class AdminDashboard {
 
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
         modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
@@ -1391,10 +1437,27 @@ class AdminDashboard {
 
     openModal(modalId) {
         const modal = document.getElementById(modalId);
+        if (!modal) return;
+        
+        // Đặt lại bất kỳ trạng thái trước đó
         modal.style.display = 'block';
         // Trigger reflow
         modal.offsetHeight;
         modal.classList.add('show');
+        
+        // Đảm bảo các nút đóng được xử lý đúng
+        const closeButtons = modal.querySelectorAll('.modal-close, .btn-secondary');
+        closeButtons.forEach(button => {
+            // Xóa event listeners cũ
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Thêm event listener mới
+            newButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.closeModal(modalId);
+            });
+        });
     }
 
     // Thêm event listeners cho đóng modal khi click ra ngoài
@@ -1477,7 +1540,7 @@ class AdminDashboard {
 
     // Thêm các phương thức xử lý popup xác nhận và thông báo
 
-    // Thêm các phương thức mới
+    // Cải tiến phương thức để xử lý tất cả các modal
     setupPopupHandlers() {
         // Thiết lập sự kiện đóng popup thông báo
         const okButton = document.getElementById('okButton');
@@ -1494,6 +1557,35 @@ class AdminDashboard {
                 this.hideConfirmation();
             });
         }
+        
+        // Xử lý đóng tất cả các modal khi nhấn nút đóng
+        document.querySelectorAll('.modal .modal-close, .modal .btn-secondary').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modalId = e.target.closest('.modal').id;
+                this.closeModal(modalId);
+            });
+        });
+        
+        // Xử lý đóng modal khi click vào overlay
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    const modalId = modal.id;
+                    this.closeModal(modalId);
+                }
+            });
+        });
+        
+        // Xử lý nút ESC để đóng modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const visibleModal = document.querySelector('.modal.show');
+                if (visibleModal) {
+                    this.closeModal(visibleModal.id);
+                }
+            }
+        });
     }
 
     /**
@@ -1506,13 +1598,20 @@ class AdminDashboard {
         const confirmTitle = document.getElementById('confirmTitle');
         const confirmMessage = document.getElementById('confirmMessage');
         const confirmButton = document.getElementById('confirmButton');
+        const cancelButton = document.getElementById('cancelButton');
         const confirmationPopup = document.getElementById('confirmationPopup');
         
-        if (confirmTitle && confirmMessage && confirmButton && confirmationPopup) {
-            // Cập nhật nội dung
-            confirmTitle.textContent = title || 'Xác nhận thao tác';
-            confirmMessage.textContent = message || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
-            
+        if (!confirmationPopup) {
+            console.error('Confirmation popup not found in the DOM');
+            return;
+        }
+        
+        // Cập nhật nội dung
+        if (confirmTitle) confirmTitle.textContent = title || 'Xác nhận thao tác';
+        if (confirmMessage) confirmMessage.textContent = message || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
+        
+        // Xử lý nút xác nhận
+        if (confirmButton) {
             // Xóa sự kiện click cũ
             const newConfirmButton = confirmButton.cloneNode(true);
             confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
@@ -1524,10 +1623,22 @@ class AdminDashboard {
                     onConfirm();
                 }
             });
-            
-            // Hiển thị popup
-            confirmationPopup.classList.add('show');
         }
+        
+        // Xử lý nút hủy
+        if (cancelButton) {
+            // Xóa sự kiện click cũ
+            const newCancelButton = cancelButton.cloneNode(true);
+            cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+            
+            // Thêm sự kiện click mới
+            newCancelButton.addEventListener('click', () => {
+                this.hideConfirmation();
+            });
+        }
+        
+        // Hiển thị popup
+        confirmationPopup.classList.add('show');
     }
 
     /**
@@ -1554,8 +1665,13 @@ class AdminDashboard {
         const okButton = document.getElementById('okButton');
         const notificationPopup = document.getElementById('notificationPopup');
         
-        if (notificationIcon && notificationTitle && notificationMessage && okButton && notificationPopup) {
-            // Cập nhật icon theo loại thông báo
+        if (!notificationPopup) {
+            console.error('Notification popup not found in the DOM');
+            return;
+        }
+        
+        // Cập nhật icon theo loại thông báo
+        if (notificationIcon) {
             notificationIcon.className = 'popup-icon ' + (type || 'success');
             
             // Cập nhật icon
@@ -1575,11 +1691,14 @@ class AdminDashboard {
                         iconElement.className = 'fas fa-check-circle';
                 }
             }
-            
-            // Cập nhật nội dung
-            notificationTitle.textContent = title || 'Thông báo';
-            notificationMessage.textContent = message || 'Thao tác đã hoàn tất.';
-            
+        }
+        
+        // Cập nhật nội dung
+        if (notificationTitle) notificationTitle.textContent = title || 'Thông báo';
+        if (notificationMessage) notificationMessage.textContent = message || 'Thao tác đã hoàn tất.';
+        
+        // Xử lý nút OK
+        if (okButton) {
             // Xóa sự kiện click cũ
             const newOkButton = okButton.cloneNode(true);
             okButton.parentNode.replaceChild(newOkButton, okButton);
@@ -1591,8 +1710,10 @@ class AdminDashboard {
                     callback();
                 }
             });
-            
-            // Hiển thị popup
+        }
+        
+        // Hiển thị popup
+        if (notificationPopup) {
             notificationPopup.classList.add('show');
         }
     }

@@ -100,29 +100,69 @@
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
     <script>
-  
+    // Khởi tạo đối tượng adminDashboard
+    let adminDashboard;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Khởi tạo adminDashboard
+        adminDashboard = new AdminDashboard();
         
         // Kiểm tra quyền admin
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = getCurrentUser();
-            if (!user || user.role !== 'admin') {
-                window.location.href = 'login.html';
-            }
-            
-            // Khởi tạo sự kiện đóng modal khi click ra ngoài
-            adminDashboard.setupModalOutsideClick();
-            
-            // Mobile sidebar toggle
-            const menuToggle = document.getElementById('menuToggle');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            
+        const user = getCurrentUser();
+        if (!user || user.role !== 'admin') {
+            window.location.href = 'login.html';
+        }
+        
+        // Thêm event listener cho các nút đóng modal
+        document.querySelectorAll('.modal-close').forEach(button => {
+            button.addEventListener('click', () => {
+                const modal = button.closest('.modal');
+                if (modal) {
+                    adminDashboard.closeModal(modal.id);
+                }
+            });
+        });
+
+        // Thêm event listener cho các nút đóng popup
+        document.querySelectorAll('.popup-btn-cancel, .popup-btn-ok').forEach(button => {
+            button.addEventListener('click', () => {
+                const popup = button.closest('.popup-container');
+                if (popup) {
+                    popup.classList.remove('active');
+                    popup.style.opacity = '0';
+                    setTimeout(() => {
+                        popup.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+
+        // Thêm event listener cho nút hủy trong confirmation popup
+        const cancelButton = document.getElementById('cancelButton');
+        if (cancelButton) {
+            cancelButton.addEventListener('click', () => {
+                const popup = document.getElementById('confirmationPopup');
+                if (popup) {
+                    popup.classList.remove('active');
+                    popup.style.opacity = '0';
+                    setTimeout(() => {
+                        popup.style.display = 'none';
+                    }, 300);
+                }
+            });
+        }
+        
+        // Mobile sidebar toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (menuToggle && sidebar && overlay) {
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('open');
                 overlay.classList.toggle('active');
             });
             
-            // Close sidebar when clicking on overlay
             overlay.addEventListener('click', () => {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
@@ -138,103 +178,101 @@
                     }
                 });
             });
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth > 768) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                }
-            });
-            
-            // Cập nhật popup handlers
-            const confirmationPopup = document.getElementById('confirmationPopup');
-            const confirmBtn = document.getElementById('confirmButton');
-            const cancelBtn = document.getElementById('cancelButton');
-            const okBtn = document.getElementById('okButton');
-            
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', () => {
-                    confirmationPopup.classList.remove('active');
-                });
-            }
-            
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => {
-                    confirmationPopup.classList.remove('active');
-                });
-            }
-            
-            if (okBtn) {
-                okBtn.addEventListener('click', () => {
-                    const notificationPopup = document.getElementById('notificationPopup');
-                    if (notificationPopup) {
-                        notificationPopup.classList.remove('active');
-                    }
-                });
-            }
-        });
-        
-        // Hiển thị notification
-        function showNotification(message, type = 'info') {
-            const notificationPopup = document.getElementById('notificationPopup');
-            const notificationIcon = document.getElementById('notificationIcon');
-            const notificationMessage = document.getElementById('notificationMessage');
-            
-            // Set icon based on type
-            notificationIcon.className = 'popup-icon';
-            switch(type) {
-                case 'success':
-                    notificationIcon.classList.add('success');
-                    notificationIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                    break;
-                case 'error':
-                    notificationIcon.classList.add('error');
-                    notificationIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
-                    break;
-                case 'warning':
-                    notificationIcon.classList.add('warning');
-                    notificationIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-                    break;
-                default:
-                    notificationIcon.classList.add('info');
-                    notificationIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
-            }
-            
-            notificationMessage.textContent = message;
-            notificationPopup.classList.add('active');
-            
-            // Auto hide after 3 seconds for success and info
-            if (type === 'success' || type === 'info') {
-                setTimeout(() => {
-                    notificationPopup.classList.remove('active');
-                }, 3000);
-            }
         }
         
-        // Hiển thị confirmation dialog
-        function showConfirmation(message, onConfirm) {
-            const confirmationPopup = document.getElementById('confirmationPopup');
-            const confirmationMessage = document.getElementById('confirmationMessage');
-            const confirmButton = document.getElementById('confirmButton');
-            
-            confirmationMessage.textContent = message;
-            confirmationPopup.classList.add('active');
-            
-            // Remove previous event listeners
-            const newConfirmBtn = confirmButton.cloneNode(true);
-            confirmButton.parentNode.replaceChild(newConfirmBtn, confirmButton);
-            
-            // Add new event listener
-            newConfirmBtn.addEventListener('click', () => {
-                confirmationPopup.classList.remove('active');
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        });
+    });
+    
+    // Hiển thị notification
+    function showNotification(message, type = 'info') {
+        const notificationPopup = document.getElementById('notificationPopup');
+        const notificationIcon = document.getElementById('notificationIcon');
+        const notificationMessage = document.getElementById('notificationMessage');
+        
+        // Set icon based on type
+        notificationIcon.className = 'popup-icon';
+        switch(type) {
+            case 'success':
+                notificationIcon.classList.add('success');
+                notificationIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                break;
+            case 'error':
+                notificationIcon.classList.add('error');
+                notificationIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                break;
+            case 'warning':
+                notificationIcon.classList.add('warning');
+                notificationIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                break;
+            default:
+                notificationIcon.classList.add('info');
+                notificationIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+        }
+        
+        notificationMessage.textContent = message;
+        notificationPopup.style.display = 'flex';
+        // Trigger reflow
+        notificationPopup.offsetHeight;
+        notificationPopup.classList.add('active');
+        
+        // Auto hide after 3 seconds for success and info
+        if (type === 'success' || type === 'info') {
+            setTimeout(() => {
+                notificationPopup.classList.remove('active');
+                notificationPopup.style.opacity = '0';
+                setTimeout(() => {
+                    notificationPopup.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+    }
+    
+    // Hiển thị confirmation dialog
+    window.showConfirmation = function(message, onConfirm) {
+        const confirmationPopup = document.getElementById('confirmationPopup');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        const confirmButton = document.getElementById('confirmButton');
+        const cancelButton = document.getElementById('cancelButton');
+        
+        confirmationMessage.textContent = message;
+        confirmationPopup.style.display = 'flex';
+        // Trigger reflow
+        confirmationPopup.offsetHeight;
+        confirmationPopup.classList.add('active');
+        
+        // Remove previous event listeners
+        const newConfirmBtn = confirmButton.cloneNode(true);
+        confirmButton.parentNode.replaceChild(newConfirmBtn, confirmButton);
+        
+        const newCancelBtn = cancelButton.cloneNode(true);
+        cancelButton.parentNode.replaceChild(newCancelBtn, cancelButton);
+        
+        // Add new event listeners
+        newConfirmBtn.addEventListener('click', () => {
+            confirmationPopup.classList.remove('active');
+            confirmationPopup.style.opacity = '0';
+            setTimeout(() => {
+                confirmationPopup.style.display = 'none';
                 if (typeof onConfirm === 'function') {
                     onConfirm();
                 }
-            });
-        }
-        
-   
+            }, 300);
+        });
+
+        newCancelBtn.addEventListener('click', () => {
+            confirmationPopup.classList.remove('active');
+            confirmationPopup.style.opacity = '0';
+            setTimeout(() => {
+                confirmationPopup.style.display = 'none';
+            }, 300);
+        });
+    }
     </script>
 </body>
 </html> 
