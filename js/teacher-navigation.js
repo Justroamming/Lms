@@ -40,17 +40,13 @@ class TeacherNavigation {
     }
 
     initializeComponent(page) {
-        // Khởi tạo component tương ứng
+
         switch(page) {
             case 'dashboard':
                 new TeacherDashboard();
                 break;
             case 'scores':
-                // Không cần khởi tạo lại vì đã có biến scoreManager toàn cục
-                if (window.scoreManager) {
-                    window.scoreManager.loadScores();
-                    window.scoreManager.loadStudentsForScoring();
-                }
+                new TeacherScores();
                 break;
             case 'schedule':
                 new TeacherSchedule();
@@ -72,9 +68,9 @@ class TeacherNavigation {
         }
     }
 
-    // Phương thức để làm mới tất cả các trang
+
     refreshAllPages() {
-        // Tải lại trang hiện tại
+
         this.loadPage(this.currentPage);
     }
 }

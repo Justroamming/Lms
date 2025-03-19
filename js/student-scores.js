@@ -119,7 +119,7 @@ class StudentScores {
                 totalScores: scores.length,
                 averageScore: 0,
                 highestScore: 0,
-                lowestScore: 10,
+                lowestScore: 0,
                 passRate: 0
             };
     

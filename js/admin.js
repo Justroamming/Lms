@@ -1205,14 +1205,7 @@ class AdminDashboard {
         }
     }
 
-    getStatusText(status) {
-        const statusMap = {
-            'active': 'Đang hoạt động',
-            'pending': 'Chờ xử lý',
-            'completed': 'Đã hoàn thành'
-        };
-        return statusMap[status] || status;
-    }
+
 
     async loadAssignmentFormData() {
         try {
@@ -1361,42 +1354,7 @@ class AdminDashboard {
         this.setupAccountEventListeners();
     }
 
-    async loadAccounts() {
-        const teachersResponse = await fetch('https://localhost:7231/Teacher/GetAllTeacher');
-        const teachersData = await teachersResponse.json();
-        const teachers = teachersData.data || [];
-        const studentsResponse = await fetch('https://localhost:7231/Student/GetAllStudents');
-        const studentsData = await studentsResponse.json();
-        const students = studentsData.data || [];
-        const adminsResponse = await fetch('https://localhost:7231/Admin/GetAllAdmins');
-        const adminsData = await adminsResponse.json();
-        const admins = adminsData.data || [];
-        
-        const accounts = [
-            ...admins.map(a => ({...a, type: 'Admin'})),
-            ...teachers.map(t => ({...t, type: 'Giáo viên'})),
-            ...students.map(s => ({...s, type: 'Học sinh'}))
-        ];
-        
-        const tbody = document.querySelector('#accountTable tbody');
-        tbody.innerHTML = accounts.map(acc => `
-            <tr>
-                <td>${acc.email}</td>
-                <td>${acc.type}</td>
-                <td>${acc.lastName || ''} ${acc.firstName || ''}</td>
-       
-                <td>
-                    <button onclick="adminDashboard.resetPassword('${acc.email}')" class="btn-edit">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button onclick="adminDashboard.toggleAccountStatus('${acc.email}')" class="btn-warning">
-                        <i class="fas fa-ban"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
+   
     
     async  getSystemStats() {   
         try {
@@ -1746,70 +1704,7 @@ class AdminDashboard {
         return true;
     }
 
-    loadData() {
-        // Load students data from localStorage
-        const storedStudents = localStorage.getItem('students');
-        if (storedStudents) {
-            this.studentsData = JSON.parse(storedStudents);
-        } else {
-            // Default data
-            this.studentsData = [
-                { id: 1, firstName: 'Nguyễn', lastName: 'Văn A', email: 'vana@example.com', gender: 'Nam', address: 'Hà Nội', dob: '2005-05-15', phone: '0987654321', password: 'password123', cohortId: 1 }
-            ];
-            localStorage.setItem('students', JSON.stringify(this.studentsData));
-        }
-        
-        // Load teachers data from localStorage
-        const storedTeachers = localStorage.getItem('teachers');
-        if (storedTeachers) {
-            this.teachersData = JSON.parse(storedTeachers);
-        } else {
-            // Default data
-            this.teachersData = [
-                { id: 1, firstName: 'Trần', lastName: 'Thị B', email: 'thib@example.com', gender: 'Nữ', address: 'TP HCM', dob: '1985-03-20', phone: '0987654322', password: 'password456' }
-            ];
-            localStorage.setItem('teachers', JSON.stringify(this.teachersData));
-        }
-        
-        // Load cohorts data from localStorage
-        const storedCohorts = localStorage.getItem('cohorts');
-        if (storedCohorts) {
-            this.cohortsData = JSON.parse(storedCohorts);
-        } else {
-            // Default data
-            this.cohortsData = [
-                { id: 1, name: '12A1', description: 'Lớp chuyên Toán' }
-            ];
-            localStorage.setItem('cohorts', JSON.stringify(this.cohortsData));
-        }
-        
-        // Load subjects data from localStorage
-        const storedSubjects = localStorage.getItem('subjects');
-        if (storedSubjects) {
-            this.subjectsData = JSON.parse(storedSubjects);
-        } else {
-            // Default data
-            this.subjectsData = [
-                { id: 1, name: 'Toán học', code: 'MATH', description: 'Môn Toán học', credits: 4 },
-                { id: 2, name: 'Vật lý', code: 'PHY', description: 'Môn Vật lý', credits: 3 },
-                { id: 3, name: 'Hóa học', code: 'CHEM', description: 'Môn Hóa học', credits: 3 }
-            ];
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-        }
-        
-        // Load assignments data from localStorage
-        const storedAssignments = localStorage.getItem('assignments');
-        if (storedAssignments) {
-            this.assignmentsData = JSON.parse(storedAssignments);
-        } else {
-            // Default data
-            this.assignmentsData = [
-                { id: 1, teacherId: 1, subjectId: 1, cohortId: 1, schedule: 'Thứ 2, 7:00 - 9:30', status: 'active' }
-            ];
-            localStorage.setItem('assignments', JSON.stringify(this.assignmentsData));
-        }
-    }
-
+    
     initPageHandlers() {
         const menuItems = document.querySelectorAll('.sidebar li');
         const pageContent = document.getElementById('pageContent');
@@ -1858,12 +1753,9 @@ class AdminDashboard {
                     <div class="table-container">
                         <table id="subjectTable">
                             <thead>
-                                <tr>
-                                    <th>Mã môn học</th>
+                                <tr> 
                                     <th>Tên môn học</th>
-                                    <th>Mô tả</th>
-                                    <th>Số tín chỉ</th>
-                                    <th>Thao tác</th>
+
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -1872,10 +1764,7 @@ class AdminDashboard {
         this.subjectsData.forEach(subject => {
             html += `
                 <tr>
-                    <td>${subject.code}</td>
                     <td>${subject.name}</td>
-                    <td>${subject.description}</td>
-                    <td>${subject.credits}</td>
                     <td>
                         <button class="btn-edit" data-id="${subject.id}"><i class="fas fa-edit"></i></button>
                         <button class="btn-delete" data-id="${subject.id}"><i class="fas fa-trash-alt"></i></button>
@@ -1902,22 +1791,12 @@ class AdminDashboard {
                     <div class="modal-body">
                         <form id="subjectForm">
                             <input type="hidden" id="subjectId">
-                            <div class="form-group">
-                                <label for="subjectCode">Mã môn học</label>
-                                <input type="text" id="subjectCode" required>
-                            </div>
+                           
                             <div class="form-group">
                                 <label for="subjectName">Tên môn học</label>
                                 <input type="text" id="subjectName" required>
                             </div>
-                            <div class="form-group">
-                                <label for="subjectDescription">Mô tả</label>
-                                <input type="text" id="subjectDescription">
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectCredits">Số tín chỉ</label>
-                                <input type="number" id="subjectCredits" min="1" max="10" required>
-                            </div>
+                            
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -1959,12 +1838,10 @@ class AdminDashboard {
         // Save subject
         saveSubjectBtn.addEventListener('click', () => {
             const subjectId = document.getElementById('subjectId').value;
-            const code = document.getElementById('subjectCode').value;
+           
             const name = document.getElementById('subjectName').value;
-            const description = document.getElementById('subjectDescription').value;
-            const credits = document.getElementById('subjectCredits').value;
-            
-            if (!code || !name || !credits) {
+           
+            if ( !name ) {
                 alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
                 return;
             }
@@ -1975,10 +1852,9 @@ class AdminDashboard {
                 if (index !== -1) {
                     this.subjectsData[index] = {
                         ...this.subjectsData[index],
-                        code,
+              
                         name,
-                        description,
-                        credits: parseInt(credits)
+                       
                     };
                 }
             } else {
@@ -1993,8 +1869,7 @@ class AdminDashboard {
                 });
             }
             
-            // Save to localStorage
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
+               
             
             // Reload page
             this.renderSubjectsPage();
@@ -2016,10 +1891,9 @@ class AdminDashboard {
                 if (subject) {
                     document.getElementById('subjectModalTitle').textContent = 'Chỉnh sửa môn học';
                     document.getElementById('subjectId').value = subject.id;
-                    document.getElementById('subjectCode').value = subject.code;
+                  
                     document.getElementById('subjectName').value = subject.name;
-                    document.getElementById('subjectDescription').value = subject.description || '';
-                    document.getElementById('subjectCredits').value = subject.credits;
+
                     
                     subjectModal.classList.add('show');
                 }
@@ -2036,8 +1910,7 @@ class AdminDashboard {
                 showConfirmation('Bạn có chắc chắn muốn xóa môn học này?', () => {
                     this.subjectsData = this.subjectsData.filter(s => s.id != subjectId);
                     
-                    // Save to localStorage
-                    localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
+                   
                     
                     // Reload page
                     this.renderSubjectsPage();
@@ -2085,17 +1958,15 @@ class AdminDashboard {
                 return;
             }
             
-            // Lưu dữ liệu môn học để sử dụng sau này
             this.subjectsData = subjects;
             
             // Cập nhật bảng
             const tbody = document.querySelector('#subjectTable tbody');
             tbody.innerHTML = subjects.map(subject => `
                 <tr>
-                    <td>${subject.code || '-'}</td>
-                    <td>${subject.name}</td>
-                    <td>${subject.description || '-'}</td>
-                    <td>${subject.credits}</td>
+
+                    <td>${subject.subjectName}</td>
+                   
                     <td>
                         <button onclick="adminDashboard.openSubjectModal('${subject.subjectId}')" class="btn-edit" data-id="${subject.subjectId}">
                             <i class="fas fa-edit"></i>
@@ -2126,7 +1997,7 @@ class AdminDashboard {
             await this.saveSubject();
         });
 
-        // Thêm sự kiện tìm kiếm
+    
         document.getElementById('searchSubject')?.addEventListener('input', (e) => {
             this.searchSubjects(e.target.value);
         });
@@ -2137,10 +2008,9 @@ class AdminDashboard {
         const form = document.getElementById('subjectForm');
         const modalTitle = document.getElementById('subjectModalTitle');
         
-        // Đặt tiêu đề modal
+
         modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
         
-        // Reset form
         form.reset();
         
         // Thiết lập dữ liệu nếu là chỉnh sửa
@@ -2148,10 +2018,9 @@ class AdminDashboard {
             const subject = this.subjectsData.find(s => s.subjectId == subjectId);
             if (subject) {
                 document.getElementById('subjectId').value = subject.subjectId;
-                document.getElementById('subjectCode').value = subject.code || '';
+               
                 document.getElementById('subjectName').value = subject.name || '';
-                document.getElementById('subjectDescription').value = subject.description || '';
-                document.getElementById('subjectCredits').value = subject.credits || '';
+               
             }
         } else {
             document.getElementById('subjectId').value = '';
@@ -2172,7 +2041,7 @@ class AdminDashboard {
         
         try {
             // Xác thực dữ liệu
-            if (!subjectData.code || !subjectData.name || !subjectData.credits) {
+            if (!subjectData.name) {
                 throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
             }
             
@@ -2205,16 +2074,15 @@ class AdminDashboard {
     async saveSubjectRequest(subjectData) {
         const params = new URLSearchParams({
             id: subjectData.subjectId || "",
-            code: subjectData.code,
-            name: subjectData.name,
-            description: subjectData.description || "",
-            credits: subjectData.credits
+           
+            sName: subjectData.subjectName,
+       
         });
 
         const isUpdating = Boolean(subjectData.subjectId);
         const url = isUpdating
-            ? `https://localhost:7231/RealAdmins/UpdateSubject?${params}`
-            : `https://localhost:7231/RealAdmins/InsertSubject?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateASubject?${params}`
+            : `https://localhost:7231/RealAdmins/InsertASubject?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -2254,7 +2122,7 @@ class AdminDashboard {
     }
     
     async deleteSubjectRequest(subjectId) {
-        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteSubject?id=${subjectId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteASubject?id=${subjectId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

@@ -1,16 +1,14 @@
 class TeacherScores {
     constructor() {
-        this.apiBaseUrl = 'https://localhost:7231'; // Replace with your API base URL
+        this.apiBaseUrl = 'https://localhost:7231/ScoreTeachers'; // Replace with your API base URL
+        this.teacher = JSON.parse(sessionStorage.getItem('currentUser'));
         this.setupEventListeners();
-        this.loadStudentsForScoring();
-        this.loadScores();
-        this.initSubjects();
+        this.loadCohorts();
+
     }
 
     setupEventListeners() {
-        document.getElementById('classFilter')?.addEventListener('change', () => {
-            this.loadStudentsForScoring();
-        });
+        
 
         document.getElementById('scoreForm')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -23,288 +21,207 @@ class TeacherScores {
         }
     }
 
-    // Danh sách môn học
-    initSubjects() {
-        const subjects = [
-            'Toán học', 'Ngữ văn', 'Tiếng Anh', 'Vật lý', 'Hóa học', 
-            'Sinh học', 'Lịch sử', 'Địa lý', 'GDCD', 'Tin học', 'Công nghệ'
-        ];
-        
-        const subjectSelect = document.getElementById('subject');
-        if (subjectSelect) {
-            subjectSelect.innerHTML = `
-                <option value="">Chọn môn học</option>
-                ${subjects.map(subject => `<option value="${subject}">${subject}</option>`).join('')}
-            `;
-        }
-    }
-
-
-    async loadStudentsForScoring() {
+    async loadCohorts() {
         try {
-            let students;
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/students`);
-                students = await response.json();
-            } catch (error) {
-                console.warn('Không thể kết nối đến API, sử dụng dữ liệu mẫu:', error);
-                students = this.getMockStudents();
-            }
+            const response = await fetch(`${this.apiBaseUrl}/GetAllCohortteachbyateacher?id=${this.teacher.teacherId}`);
+            const cohorts = await response.json();
+            const classFilter = document.getElementById('classFilter');
+           
+            if (classFilter) {
+                classFilter.innerHTML = `
+                    <option value="">Chọn lớp học</option>
+                    ${cohorts.map(cohort => `
+                        <option value="${cohort.cohortID}">
+                            ${cohort.cohortName}
+                        </option>
+                    `).join('')}
+                `;
 
-            const classFilter = document.getElementById('classFilter')?.value;
-
-            const filteredStudents = classFilter 
-                ? students.filter(student => student.class === classFilter)
-                : students;
-
-            const studentSelect = document.getElementById('studentSelect');
-            if (studentSelect) {
-                studentSelect.innerHTML = `
-                    <option value="">Chọn học sinh</option>
-                    ${filteredStudents.map(student => `
-                        <option value="${student.studentId}">
-                            ${student.studentId} - ${student.fullName} - ${student.class}
+            const subjectresponse = await fetch(`${this.apiBaseUrl}/GetTeacherAllSubjectsTeach?id=${this.teacher.teacherId}`);
+            const subjects = await subjectresponse.json();
+            const subject = document.getElementById('subjectID');    
+            if(subject){
+                subject.innerHTML = `
+                    <option value="">Chọn môn học</option>
+                    ${subjects.map(subject => `
+                        <option value="${subject.subjectID}">
+                            ${subject.subjectName}
                         </option>
                     `).join('')}
                 `;
             }
-            
-            // Cập nhật danh sách lớp học cho bộ lọc
-            const classFilter_el = document.getElementById('classFilter');
-            if (classFilter_el) {
-                const classes = [...new Set(students.map(student => student.class))];
-                classFilter_el.innerHTML = `
-                    <option value="">Tất cả lớp</option>
-                    ${classes.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+
+                classFilter.addEventListener('change', () => {
+                    this.filterStudentsByCohort(classFilter.value);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading cohorts:', error);
+        }
+    }
+
+    async filterStudentsByCohort(cohortId) {
+        try {
+        const response = await fetch(`${this.apiBaseUrl}/GetTeacherAllStudentGrades?id=${this.teacher.teacherId}`);
+            const scores = await response.json();
+            const studentsResponse = await fetch(`${this.apiBaseUrl}/GetTeacherAllTeachStudentsByCohort?id=${this.teacher.teacherId}`);
+            const students = await studentsResponse.json();
+            const studentSelect = document.getElementById('studentID');
+            if(studentSelect){
+                studentSelect.innerHTML = `
+                    <option value="">Tất cả học sinh</option>
+                    ${students.filter(s => !cohortId || s.cohortID === cohortId).map(student => `
+                        <option value="${student.studentID}">
+                            ${student.studentName}
+                        </option>
+                    `).join('')}
                 `;
             }
-        } catch (error) {
-            console.error('Error loading students:', error);
-        }
-    }
 
-    async loadScores() {
-        try {
-            let scores;
-            let students;
-            
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/scores`);
-                scores = await response.json();
-                const studentsResponse = await fetch(`${this.apiBaseUrl}/students`);
-                students = await studentsResponse.json();
-            } catch (error) {
-                console.warn('Không thể kết nối đến API, sử dụng dữ liệu mẫu:', error);
-                scores = this.getMockScores();
-                students = this.getMockStudents();
-            }
-            
-            const tbody = document.querySelector('#scoreTable tbody');
-            if (!tbody) return;
+           const tbody = document.querySelector('#scoreTable tbody');
+           if (!tbody) return;
 
-            const sortedScores = scores.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            tbody.innerHTML = sortedScores.map(score => {
-                const student = students.find(s => s.studentId === score.studentId);
-                if (!student) return ''; 
-
-                return `
-                    <tr>
-                        <td>${student.studentId}</td>
-                        <td>${student.fullName}</td>
-                        <td>${student.class}</td>
-                        <td>${score.subject}</td>
-                        <td>${score.type}</td>
-                        <td>${score.score}</td>
-                        <td>${new Date(score.date).toLocaleDateString('vi-VN')}</td>
-                        <td>
-                            <button class="btn btn-edit" onclick="scoreManager.editScore('${score.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-delete" onclick="scoreManager.deleteScore('${score.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        } catch (error) {
-            console.error('Error loading scores:', error);
-        }
-    }
-
-    async saveScore() {
-        const scoreId = document.getElementById('scoreId')?.value || Date.now().toString();
-        const studentId = document.getElementById('studentSelect').value;
-        const scoreValue = parseFloat(document.getElementById('scoreValue').value);
-
-        try {
-            let student;
-            
-            try {
-                const studentsResponse = await fetch(`${this.apiBaseUrl}/students`);
-                const students = await studentsResponse.json();
-                student = students.find(s => s.studentId === studentId);
-            } catch (error) {
-                console.warn('Không thể kết nối đến API, sử dụng dữ liệu mẫu:', error);
-                const mockStudents = this.getMockStudents();
-                student = mockStudents.find(s => s.studentId === studentId);
-            }
-            
-            if (!student) {
-                alert('Học sinh không tồn tại!');
-                return;
-            }
-
-            if (scoreValue < 0 || scoreValue > 10) {
-                alert('Điểm số phải từ 0 đến 10!');
-                return;
-            }
-
-            const scoreData = {
-                id: scoreId,
-                studentId: studentId,
-                studentName: student.fullName,
-                class: student.class,
-                subject: document.getElementById('subject').value,
-                type: document.getElementById('scoreType').value,
-                score: scoreValue,
-                date: document.getElementById('scoreDate').value
-            };
-
-            try {
-                const method = scoreId ? 'PUT' : 'POST';
-                const url = scoreId ? `${this.apiBaseUrl}/scores/${scoreId}` : `${this.apiBaseUrl}/scores`;
-
-                await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(scoreData)
-                });
-            } catch (error) {
-                console.warn('Không thể kết nối đến API để lưu điểm, chỉ cập nhật giao diện:', error);
-                // Hiển thị thông báo cho người dùng
-                alert('Không thể kết nối đến máy chủ. Dữ liệu sẽ được lưu tạm thời và sẽ mất khi làm mới trang.');
-            }
-
-            this.closeModal();
-            this.loadScores();
-
-            if (window.navigationInstance) {
-                window.navigationInstance.refreshAllPages();
-            }
-        } catch (error) {
-            console.error('Error saving score:', error);
-        }
-    }
-
-    async deleteScore(scoreId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa điểm này?')) return;
-
-        try {
-            try {
-                await fetch(`${this.apiBaseUrl}/scores/${scoreId}`, {
-                    method: 'DELETE'
-                });
-            } catch (error) {
-                console.warn('Không thể kết nối đến API để xóa điểm, chỉ cập nhật giao diện:', error);
-                // Hiển thị thông báo cho người dùng
-                alert('Không thể kết nối đến máy chủ. Dữ liệu sẽ được xóa tạm thời và sẽ xuất hiện lại khi làm mới trang.');
-            }
-
-            this.loadScores();
-            
-            if (window.navigationInstance) {
-                window.navigationInstance.refreshAllPages();
-            }
-        } catch (error) {
-            console.error('Error deleting score:', error);
-        }
+           tbody.innerHTML = scores.map(score => {
+               const student = students.find(s => s.studentID === score.studentID && s.cohortID === cohortId);
+               if (!student) return ''; 
+               return `
+                   <tr>
+                       <td>${student.studentName}</td>
+                       <td>${student.cohortName}</td>
+                       <td>${score.subjectName}</td>
+                       <td>${score.testType}</td>
+                       <td>${score.score}</td>
+                       <td>${score.weight}%</td>
+                       <td>${score.testDate}</td>
+                       <td>${score.gradeDate}</td>
+                       <td>
+                           <button class="btn btn-edit" onclick="window.TeacherScores.openeditModal('${score.gradeID}')">
+                               <i class="fas fa-edit"></i>
+                           </button>
+                           <button class="btn btn-delete" onclick="window.TeacherScores.deleteScore('${score.gradeID}')">
+                               <i class="fas fa-trash"></i>
+                           </button>
+                       </td>
+                   </tr>
+               `;
+           }).join('');
+       } catch (error) {
+           console.error('Error filtering students:', error);
+       }
     }
 
     openAddScoreModal() {
         const modal = document.getElementById('scoreModal');
         if (modal) {
             document.getElementById('modalTitle').textContent = 'Thêm Điểm Mới';
-            document.getElementById('scoreId').value = '';
+            document.getElementById('gradeID').value = '';
             document.getElementById('scoreForm').reset();
-            document.getElementById('scoreDate').valueAsDate = new Date();
+            document.getElementById('gradeDate').valueAsDate = new Date();
             modal.style.display = 'block';
+            
         }
     }
 
-    async editScore(scoreId) {
+    async openeditModal(gradeID) {
+        const modal = document.getElementById('scoreModal');
+        const form = document.getElementById('scoreForm');
+
+        if (gradeID) {
+            const response = await fetch(`${this.apiBaseUrl}/GetAOneStudentGradeByTeacher?gradeID=${gradeID}`);
+            const ScoreArray = await response.json();
+          
+            
+            // Populate fields directly using API keys
+            Object.keys(ScoreArray).forEach(key => {
+                const input = form.querySelector(`[id="${key}"]`);
+                if (input) {
+                    input.value = ScoreArray[key];
+                }
+            });
+        } else {
+            form.reset();
+        }
+        document.getElementById('scoreModal').style.display = 'block';
+    }
+
+    async saveScore() {
+        const gradeId = document.getElementById('gradeID')?.value?.trim();
+        const studentId = document.getElementById('studentID')?.value?.trim();
+        const scoreValue = parseFloat(document.getElementById('score')?.value);
+        const subject = document.getElementById('subjectID')?.value?.trim();
+        const type = document.getElementById('testType')?.value?.trim();
+        const weight = parseFloat(document.getElementById('weight')?.value?.trim());
+        const testDate = document.getElementById('testDate')?.value?.trim();
+        const date = document.getElementById('gradeDate')?.value?.trim();
+    
         try {
-            let scores;
-            let students;
-            
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/scores`);
-                scores = await response.json();
-                const studentsResponse = await fetch(`${this.apiBaseUrl}/students`);
-                students = await studentsResponse.json();
-            } catch (error) {
-                console.warn('Không thể kết nối đến API, sử dụng dữ liệu mẫu:', error);
-                scores = this.getMockScores();
-                students = this.getMockStudents();
-            }
-            
-            const score = scores.find(s => s.id == scoreId);
-            if (!score) {
-                alert('Không tìm thấy điểm cần sửa!');
+                
+            if (scoreValue < 0 || scoreValue > 10) {
+                alert('Điểm số phải từ 0 đến 10!');
                 return;
             }
+            const isupdating=Boolean(gradeId);
+            const params = new URLSearchParams({
+                gradeID: gradeId||'',
+                studentID: studentId,
+                score: scoreValue,
+                teacherID: this.teacher.teacherId,
+                gradeDate: date,
+                subjectID:subject,
+                testType:type,
+                testDate:testDate,
+                weight:weight         
+              
+            });
             
-            const modal = document.getElementById('scoreModal');
-            if (!modal) return;
+
+            const url = isupdating 
+            ? `${this.apiBaseUrl}/UpdateTeacherStudentGrade?${params}` 
+            : `${this.apiBaseUrl}/InsertTeacherStudentGrade?${params}`;
             
-            // Cập nhật tiêu đề modal
-            document.getElementById('modalTitle').textContent = 'Sửa Điểm';
-            
-            // Điền dữ liệu vào form
-            document.getElementById('scoreId').value = score.id;
-            
-            // Đảm bảo danh sách học sinh đã được tải
-            await this.loadStudentsForScoring();
-            
-            // Chọn học sinh
-            const studentSelect = document.getElementById('studentSelect');
-            if (studentSelect) {
-                studentSelect.value = score.studentId;
+            const method = isupdating ? 'PUT' : 'POST';
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+              
+            });
+    
+            if (!response.ok) {
+                throw new Error('Lưu điểm thất bại!');
             }
+    
+            this.closeModal();
             
-            // Chọn môn học
-            const subjectSelect = document.getElementById('subject');
-            if (subjectSelect) {
-                subjectSelect.value = score.subject;
-            }
-            
-            // Chọn loại điểm
-            const scoreTypeSelect = document.getElementById('scoreType');
-            if (scoreTypeSelect) {
-                scoreTypeSelect.value = score.type;
-            }
-            
-            // Điền điểm số
-            document.getElementById('scoreValue').value = score.score;
-            
-            // Điền ngày
-            document.getElementById('scoreDate').value = score.date;
-            
-            // Hiển thị modal
-            modal.style.display = 'block';
+            this.filterStudentsByCohort(document.getElementById('classFilter').value);
+    
+       
+     
         } catch (error) {
-            console.error('Error editing score:', error);
+            console.error('Lỗi khi lưu điểm:', error);
+            alert(`Lỗi: ${error.message}`);
+        }
+    }
+    
+
+    async deleteScore(gradeID) {
+        if (!confirm('Bạn có chắc chắn muốn xóa điểm này?')) return;
+        console.log("gradeID: ",gradeID);
+        try {
+            await fetch(`${this.apiBaseUrl}/DeleteTeacherStudentGrade?gradeID=${gradeID}`, {
+                method: 'DELETE'
+            });
+
+            await this.filterStudentsByCohort(document.getElementById('classFilter').value);
+
+           
+        } catch (error) {
+            console.error('Error deleting score:', error);
         }
     }
 
     closeModal() {
-        const modal = document.getElementById('scoreModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
+        document.getElementById('scoreModal').style.display = 'none';
     }
 
     validateScore(score) {
@@ -312,11 +229,8 @@ class TeacherScores {
     }
 }
 
-// Khởi tạo đối tượng scoreManager toàn cục
-let scoreManager;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Khởi tạo đúng cách
-    scoreManager = new TeacherScores();
-    window.scoreManager = scoreManager;
+    const teacherScoresInstance = new TeacherScores();
+    window.TeacherScores = teacherScoresInstance;
 });
