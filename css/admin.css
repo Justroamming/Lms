@@ -723,7 +723,7 @@ canvas#studentDistributionChart {
     
     .sidebar {
         position: fixed;
-        left: -350px;
+        left: -360px;
         top: 0;
         height: 100%;
         z-index: 1000;
