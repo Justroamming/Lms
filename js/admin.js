@@ -313,6 +313,37 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveStudent();
         });
+        
+        // Add search functionality
+        document.getElementById('searchStudent')?.addEventListener('input', (e) => {
+            this.searchStudents(e.target.value);
+        });
+    }
+
+    searchStudents(query) {
+        try {
+            const tbody = document.querySelector('#studentTable tbody');
+            if (!tbody) {
+                console.error("Could not find student table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in student table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchStudents:", error);
+        }
     }
 
     async openStudentModal(studentId = null) {
@@ -579,6 +610,37 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveTeacher();
         });
+        
+        // Add search functionality
+        document.getElementById('searchTeacher')?.addEventListener('input', (e) => {
+            this.searchTeachers(e.target.value);
+        });
+    }
+
+    searchTeachers(query) {
+        try {
+            const tbody = document.querySelector('#teacherTable tbody');
+            if (!tbody) {
+                console.error("Could not find teacher table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in teacher table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchTeachers:", error);
+        }
     }
 
     async openTeacherModal(teacherId = null) {
@@ -918,7 +980,39 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveCohort();
         });
+        
+        // Add search functionality
+        document.getElementById('searchCohort')?.addEventListener('input', (e) => {
+            this.searchCohorts(e.target.value);
+        });
     }
+
+    searchCohorts(query) {
+        try {
+            const tbody = document.querySelector('#cohortTable tbody');
+            if (!tbody) {
+                console.error("Could not find cohort table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in cohort table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchCohorts:", error);
+        }
+    }
+
 
     async openCohortModal(cohortId = null) {
         // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
@@ -1221,7 +1315,7 @@ class AdminDashboard {
         
         try {
             // Xác thực dữ liệu
-            if (!subjectData.name) {
+            if (!subjectData.subjectName) {
                 throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
             }
             
@@ -1318,21 +1412,37 @@ class AdminDashboard {
     }
 
     searchSubjects(query) {
-        const rows = document.querySelectorAll('#subjectTable tbody tr');
-        const searchText = query.toLowerCase();
-        
-        rows.forEach(row => {
-            const code = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            const description = row.cells[2].textContent.toLowerCase();
-            
-            if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+        try {
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Could not find subject table body");
+                return;
             }
-        });
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in subject table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                // Get the text content of the subject name cell (first column)
+                const subjectName = row.cells[0]?.textContent.toLowerCase() || '';
+                
+                // Show/hide row based on search match
+                if (subjectName.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        } catch (error) {
+            console.error("Error in searchSubjects:", error);
+        }
     }
+    
     async initializeAssignmentManagement() {
         await this.loadAssignments();
         this.setupAssignmentEventListeners();
@@ -1544,11 +1654,22 @@ class AdminDashboard {
     }
 
     searchAssignments(query) {
-        const rows = document.querySelectorAll('#assignmentTable tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
-        });
+        try {
+            const rows = document.querySelectorAll('#assignmentTable tbody tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in assignment table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchAssignments:", error);
+        }
     }
 
     async initializeAccountManagement() {
