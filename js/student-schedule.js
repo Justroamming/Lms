@@ -86,7 +86,7 @@ class StudentSchedule {
     // Load schedule của sinh viên từ API.
     async loadSchedule() {
       try {
-        const response = await fetch(`https://localhost:7231/ScheduleStudents/GetOneStudentSchedule?id=${this.student.studentId}`);
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleStudents/GetOneStudentSchedule?id=${this.student.studentId}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

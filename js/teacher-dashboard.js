@@ -8,7 +8,7 @@ class TeacherDashboard {
     async initializeDashboard() {
         try {
             // Fetch teacher data from API
-            const response = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
             const teacher = await response.json();
             const teacherData = teacher.data;
             
@@ -38,7 +38,7 @@ class TeacherDashboard {
     async updateDashboardView() {
    
         try {
-            const totalStudentsResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTotalStudentsByTeacher?id=${this.teacher.teacherId}`);
+            const totalStudentsResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTotalStudentsByTeacher?id=${this.teacher.teacherId}`);
             const totalStudentsData = await totalStudentsResponse.json();
             
             const totalStudentsElement = document.getElementById('totalStudents');
@@ -54,7 +54,7 @@ class TeacherDashboard {
         
 
         try {
-            const AverageScoreResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetAverageScoreByTeacher?id=${this.teacher.teacherId}`);
+            const AverageScoreResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetAverageScoreByTeacher?id=${this.teacher.teacherId}`);
             const AverageScoreData = await AverageScoreResponse.json();
             const averageElement = document.getElementById('averageScore');
         
@@ -95,7 +95,7 @@ class TeacherDashboard {
 
     async updateSchedule() {
         try {
-            const response = await fetch(`https://localhost:7231/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
+            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
             const schedule = await response.json();
 
             const scheduleContainer = document.getElementById('todaySchedule');
