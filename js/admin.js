@@ -16,28 +16,16 @@ class AdminDashboard {
             this.handleResponsiveLayout();
         });
 
+        // Đảm bảo các popup tồn tại trong DOM
+        this.ensurePopupsExist();
+
         // Khởi tạo xử lý popup
         this.setupPopupHandlers();
 
-        this.pages = {
-            dashboard: 'Tổng quan',
-            students: 'Quản lý học sinh',
-            teachers: 'Quản lý giáo viên',
-            cohorts: 'Quản lý lớp học',
-            subjects: 'Quản lý môn học',
-            assignments: 'Phân công giảng dạy'
-        };
-        this.studentsData = [];
-        this.teachersData = [];
-        this.cohortsData = [];
-        this.subjectsData = [];
-        this.assignmentsData = [];
+        this.setupModalCloseHandlers();
         
-        // Khởi tạo dữ liệu
-        this.loadData();
-        
-        // Xử lý hiển thị trang
-        this.initPageHandlers();
+        // Thêm log khởi tạo để debug
+        console.log('AdminDashboard đã được khởi tạo');
     }
 
     initializeNavigation() {
@@ -211,15 +199,20 @@ class AdminDashboard {
         try {
             // Lấy tất cả học sinh
             const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
-            const studentsData = await studentsResponse.json();
+            const studentsData = await studentsResponse.json(); // Đã sửa từ response thành studentsResponse
             const students = studentsData.data || [];
 
             // Tính tỷ lệ nam/nữ
             const maleStudents = students.filter(s => s.gender === 'Male').length;
             const femaleStudents = students.filter(s => s.gender === 'Female').length;
-            const malePercent = Math.round((maleStudents / students.length) * 100);
-            const femalePercent = Math.round((femaleStudents / students.length) * 100);
-            document.getElementById('genderRatio').textContent = `${malePercent}% / ${femalePercent}%`;
+            const malePercent = Math.round((maleStudents / students.length) * 100) || 0;
+            const femalePercent = Math.round((femaleStudents / students.length) * 100) || 0;
+            
+            // Thêm kiểm tra phần tử tồn tại trước khi cập nhật
+            const genderRatioElement = document.getElementById('genderRatio');
+            if (genderRatioElement) {
+                genderRatioElement.textContent = `${malePercent}% / ${femalePercent}%`;
+            }
 
             // Lấy thông tin về lớp học
             const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
@@ -237,12 +230,24 @@ class AdminDashboard {
             }));
 
             // Tìm lớp đông nhất và ít nhất
+            if (cohortStats.length > 0) {
             const sortedCohorts = cohortStats.sort((a, b) => b.count - a.count);
             const largest = sortedCohorts[0];
             const smallest = sortedCohorts[sortedCohorts.length - 1];
 
-            document.getElementById('largestClass').textContent = `${largest.name} (${largest.count} học sinh)`;
-            document.getElementById('smallestClass').textContent = `${smallest.name} (${smallest.count} học sinh)`;
+                const largestClassElement = document.getElementById('largestClass');
+                const smallestClassElement = document.getElementById('smallestClass');
+                
+                if (largestClassElement) {
+                    largestClassElement.textContent = `${largest.name} (${largest.count} học sinh)`;
+                }
+                
+                if (smallestClassElement) {
+                    smallestClassElement.textContent = `${smallest.name} (${smallest.count} học sinh)`;
+                }
+            } else {
+                console.warn('Không có dữ liệu lớp học hoặc danh sách rỗng');
+            }
 
         } catch (error) {
             console.error("Lỗi khi cập nhật thống kê nhanh:", error);
@@ -295,7 +300,7 @@ class AdminDashboard {
                 const cohort = cohorts.find(co => co.cohortId === student.cohortId);
                 const cohortName = cohort ? cohort.cohortName : 'N/A';
                 return`
-                <tr>
+                <tr data-id="${student.studentId}">
                 
                     <td>${student.firstName}</td>
                     <td>${student.lastName}</td>     
@@ -307,15 +312,28 @@ class AdminDashboard {
                     <td>${student.password}</td>
                     <td>${cohort ? cohortName: 'N/A'}</td>
                     <td>
-                        <button onclick="adminDashboard.openStudentModal('${student.studentId}')" class="btn-edit" data-id="${student.studentId}">
+                        <button class="btn-edit" data-id="${student.studentId}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="adminDashboard.deleteStudent('${student.studentId}')" class="btn-delete" data-id="${student.studentId}">
+                        <button class="btn-delete" data-id="${student.studentId}" 
+                            onclick="console.log('Delete button clicked directly for ID: ${student.studentId}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `}).join('');
+            
+            // Thêm event listeners trực tiếp cho các nút delete
+            const deleteButtons = tbody.querySelectorAll('.btn-delete');
+            deleteButtons.forEach(button => {
+                const studentId = button.dataset.id;
+                button.addEventListener('click', (e) => {
+                    console.log('Direct event: Delete button clicked for ID:', studentId);
+                    e.stopPropagation(); // Ngăn chặn event bubbling
+                });
+            });
+            
+            console.log('Total delete buttons added:', deleteButtons.length);
         } catch (error) {
             console.error("Error loading students:", error);
         }
@@ -326,11 +344,65 @@ class AdminDashboard {
         document.getElementById('addStudentBtn')?.addEventListener('click', () => {
             this.openStudentModal();
         });
-
-        document.getElementById('studentForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveStudent();
+        
+        // Add search functionality
+        document.getElementById('searchStudent')?.addEventListener('input', (e) => {
+            this.searchStudents(e.target.value);
         });
+        
+        // Xử lý sự kiện cho các nút trong bảng
+        const studentTable = document.querySelector('#studentTable');
+        if (studentTable) {
+            // Sử dụng event delegation cho các nút trong bảng
+            studentTable.addEventListener('click', (e) => {
+                // Xác định nút đã được nhấp
+                const target = e.target.closest('.btn-edit, .btn-delete');
+                if (!target) return; // Không phải click vào nút
+                
+                // Lấy ID học sinh từ thuộc tính data-id hoặc từ phần tử cha
+                const studentId = target.dataset.id || target.closest('tr').dataset.id;
+                if (!studentId) return; // Không tìm thấy ID
+                
+                // Xử lý tương ứng với loại nút
+                if (target.classList.contains('btn-edit')) {
+                    console.log('Edit student:', studentId);
+                    this.openStudentModal(studentId);
+                } else if (target.classList.contains('btn-delete')) {
+                    console.log('Delete student:', studentId);
+                    this.deleteStudent(studentId);
+                }
+                
+                // Ngăn sự kiện lan ra
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+    }
+
+    searchStudents(query) {
+        try {
+            const tbody = document.querySelector('#studentTable tbody');
+            if (!tbody) {
+                console.error("Could not find student table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in student table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchStudents:", error);
+        }
     }
 
     async openStudentModal(studentId = null) {
@@ -401,16 +473,18 @@ class AdminDashboard {
                             if (addressField) addressField.value = studentData.address || '';
                             
                             // Xử lý ngày sinh
-                            if (dobField && studentData.dob) {
-                                let dobValue = studentData.dob;
+                            if (dobField) {
+                                let dobValue = studentData.dateOfBirth || studentData.dob || '';
                                 // Cắt thời gian nếu cần thiết
-                                if (dobValue.includes('T')) {
+                                if (dobValue && dobValue.includes('T')) {
                                     dobValue = dobValue.split('T')[0];
                                 }
                                 dobField.value = dobValue;
                             }
                             
-                            if (phoneField) phoneField.value = studentData.phone || '';
+                            // Modify these lines to match the API response field names
+                            if (phoneField) phoneField.value = studentData.phoneNumber || studentData.phone || '';
+                            
                             if (passwordField) passwordField.value = studentData.password || '';
                             
                             // Đặt giá trị cho lớp học
@@ -507,21 +581,31 @@ class AdminDashboard {
     
     
     async deleteStudent(studentId) {
+        console.log('deleteStudent called for ID:', studentId);
+        
         try {
-            this.showConfirmation(
+            // Sử dụng phương thức hiển thị popup mạnh hơn
+            this.forceShowConfirmation(
                 'Xác nhận xóa học sinh',
                 'Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu không thể khôi phục sau khi xóa.',
                 async () => {
+                    console.log('Xác nhận xóa học sinh với ID:', studentId);
                     try {
+                        console.log('Bắt đầu gọi API xóa học sinh');
                         await this.deleteStudentRequest(studentId);
+                        console.log('API xóa học sinh thành công');
+                        
+                        // Cập nhật danh sách học sinh
                         await this.loadStudents();
+                        
+                        // Hiển thị thông báo thành công
                         this.showNotification(
                             'success',
                             'Xóa học sinh thành công',
                             'Học sinh đã được xóa khỏi hệ thống.'
                         );
                     } catch (error) {
-                        console.error('Error deleting student:', error);
+                        console.error('Lỗi chi tiết khi xóa học sinh:', error);
                         this.showNotification(
                             'error',
                             'Lỗi xóa học sinh',
@@ -530,8 +614,25 @@ class AdminDashboard {
                     }
                 }
             );
+            
+            // Kiểm tra trạng thái popup sau khi hiển thị
+            setTimeout(() => {
+                this.checkPopupStatus();
+            }, 100);
+            
         } catch (error) {
-            console.error('Error in deleteStudent:', error);
+            console.error('Lỗi trong phương thức deleteStudent:', error);
+            // Sử dụng xác nhận thông thường nếu có lỗi với popup
+            if (window.confirm('Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu không thể khôi phục sau khi xóa.')) {
+                try {
+                    await this.deleteStudentRequest(studentId);
+                    await this.loadStudents();
+                    alert('Xóa học sinh thành công!');
+                } catch (error) {
+                    console.error('Lỗi khi xóa học sinh (fallback):', error);
+                    alert('Lỗi xóa học sinh. Vui lòng thử lại sau.');
+                }
+            }
         }
     }
 
@@ -560,9 +661,7 @@ class AdminDashboard {
     
             const tbody = document.querySelector('#teacherTable tbody');
             tbody.innerHTML = teachers.map(teacher => `
-                <tr>
-                
-                    
+                <tr data-id="${teacher.teacherId}">
                     <td>${teacher.lastName}</td>
                     <td>${teacher.firstName}</td>
                     <td>${teacher.email}</td>
@@ -573,10 +672,10 @@ class AdminDashboard {
                     <td>${teacher.password}</td>
                    
                     <td>
-                        <button onclick="adminDashboard.openTeacherModal('${teacher.teacherId}')" class="btn-edit" data-id="${teacher.teacherId}">
+                        <button class="btn-edit" data-id="${teacher.teacherId}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="adminDashboard.deleteTeacher('${teacher.teacherId}')" class="btn-delete" data-id="${teacher.teacherId}">
+                        <button class="btn-delete" data-id="${teacher.teacherId}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -592,11 +691,65 @@ class AdminDashboard {
         document.getElementById('addTeacherBtn')?.addEventListener('click', () => {
             this.openTeacherModal();
         });
-
-        document.getElementById('teacherForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveTeacher();
+        
+        // Add search functionality
+        document.getElementById('searchTeacher')?.addEventListener('input', (e) => {
+            this.searchTeachers(e.target.value);
         });
+        
+        // Xử lý sự kiện cho các nút trong bảng
+        const teacherTable = document.querySelector('#teacherTable');
+        if (teacherTable) {
+            // Sử dụng event delegation cho các nút trong bảng
+            teacherTable.addEventListener('click', (e) => {
+                // Xác định nút đã được nhấp
+                const target = e.target.closest('.btn-edit, .btn-delete');
+                if (!target) return; // Không phải click vào nút
+                
+                // Lấy ID giáo viên từ thuộc tính data-id hoặc từ phần tử cha
+                const teacherId = target.dataset.id || target.closest('tr').dataset.id;
+                if (!teacherId) return; // Không tìm thấy ID
+                
+                // Xử lý tương ứng với loại nút
+                if (target.classList.contains('btn-edit')) {
+                    console.log('Edit teacher:', teacherId);
+                    this.openTeacherModal(teacherId);
+                } else if (target.classList.contains('btn-delete')) {
+                    console.log('Delete teacher:', teacherId);
+                    this.deleteTeacher(teacherId);
+                }
+                
+                // Ngăn sự kiện lan ra
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+    }
+
+    searchTeachers(query) {
+        try {
+            const tbody = document.querySelector('#teacherTable tbody');
+            if (!tbody) {
+                console.error("Could not find teacher table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in teacher table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchTeachers:", error);
+        }
     }
 
     async openTeacherModal(teacherId = null) {
@@ -663,16 +816,18 @@ class AdminDashboard {
                             if (addressField) addressField.value = teacherData.address || '';
                             
                             // Xử lý ngày sinh
-                            if (dobField && teacherData.dob) {
-                                let dobValue = teacherData.dob;
+                            if (dobField) {
+                                let dobValue = teacherData.dateOfBirth || teacherData.dob || '';
                                 // Cắt thời gian nếu cần thiết
-                                if (dobValue.includes('T')) {
+                                if (dobValue && dobValue.includes('T')) {
                                     dobValue = dobValue.split('T')[0];
                                 }
                                 dobField.value = dobValue;
                             }
                             
-                            if (phoneField) phoneField.value = teacherData.phone || '';
+                            // Modify these lines to match the API response field names
+                            if (phoneField) phoneField.value = teacherData.phoneNumber || teacherData.phone || '';
+                            
                             if (passwordField) passwordField.value = teacherData.password || '';
                             
                             // Log các trường đã điền
@@ -794,7 +949,7 @@ class AdminDashboard {
     }
 
 
-    async  loadCohorts() {
+    async loadCohorts() {
         try {
             const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
             const data = await response.json();
@@ -828,18 +983,18 @@ class AdminDashboard {
             const tbody = document.querySelector('#cohortTable tbody');
             tbody.innerHTML = cohorts.map((co, index) => {
                 return `
-                    <tr>
+                    <tr data-id="${co.cohortId}">
                         <td>${co.cohortName}</td>
                         <td>${co.description}</td>
                         <td>${studentCounts[index]}</td>
                         <td>
-                            <button onclick="adminDashboard.openCohortModal('${co.cohortId}')" class="btn-edit">
+                            <button class="btn-edit" data-id="${co.cohortId}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="adminDashboard.deleteCohort('${co.cohortId}')" class="btn-delete">
+                            <button class="btn-delete" data-id="${co.cohortId}">
                                 <i class="fas fa-trash"></i>
                             </button>
-                             <button onclick="adminDashboard.printStudentInfo('${co.cohortId}')" class="btn-print">
+                            <button class="btn-print" data-id="${co.cohortId}">
                             <i class="fas fa-print"></i> Print
                         </button>
                         </td>
@@ -931,12 +1086,70 @@ class AdminDashboard {
         document.getElementById('addCohortBtn')?.addEventListener('click', () => {
             this.openCohortModal();
         });
-
-        document.getElementById('cohortForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveCohort();
+        
+        // Add search functionality
+        document.getElementById('searchCohort')?.addEventListener('input', (e) => {
+            this.searchCohorts(e.target.value);
         });
+        
+        // Xử lý sự kiện cho các nút trong bảng
+        const cohortTable = document.querySelector('#cohortTable');
+        if (cohortTable) {
+            // Sử dụng event delegation cho các nút trong bảng
+            cohortTable.addEventListener('click', (e) => {
+                // Xác định nút đã được nhấp
+                const target = e.target.closest('.btn-edit, .btn-delete, .btn-print');
+                if (!target) return; // Không phải click vào nút
+                
+                // Lấy ID lớp học từ thuộc tính data-id hoặc từ phần tử cha
+                const cohortId = target.dataset.id || target.closest('tr').dataset.id;
+                if (!cohortId) return; // Không tìm thấy ID
+                
+                // Xử lý tương ứng với loại nút
+                if (target.classList.contains('btn-edit')) {
+                    console.log('Edit cohort:', cohortId);
+                    this.openCohortModal(cohortId);
+                } else if (target.classList.contains('btn-delete')) {
+                    console.log('Delete cohort:', cohortId);
+                    this.deleteCohort(cohortId);
+                } else if (target.classList.contains('btn-print')) {
+                    console.log('Print cohort:', cohortId);
+                    this.printStudentInfo(cohortId);
+                }
+                
+                // Ngăn sự kiện lan ra
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
     }
+
+    searchCohorts(query) {
+        try {
+            const tbody = document.querySelector('#cohortTable tbody');
+            if (!tbody) {
+                console.error("Could not find cohort table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in cohort table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchCohorts:", error);
+        }
+    }
+
 
     async openCohortModal(cohortId = null) {
         // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
@@ -989,8 +1202,8 @@ class AdminDashboard {
                             const descriptionField = form.querySelector('[name="description"]');
                             
                             // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
-                            if (nameField) nameField.value = cohortData.name || cohortData.CName || '';
-                            if (descriptionField) descriptionField.value = cohortData.description || cohortData.Description || '';
+                            if (nameField) nameField.value = cohortData.cohortName;
+                            if (descriptionField) descriptionField.value = cohortData.description;
                             
                             // Log các trường đã điền
                             console.log('Form filled with the following values:', {
@@ -1068,7 +1281,7 @@ class AdminDashboard {
     async saveCohortRequest(cohortData) {
         const params = new URLSearchParams({
             id: cohortData.cohortId || "",
-            name: cohortData.cohortName,
+            Cname: cohortData.cohortName,
             description: cohortData.description
         });
 
@@ -1135,9 +1348,256 @@ class AdminDashboard {
     }
 
     
+    async initializeSubjectManagement() {
+        await this.loadSubjects();
+        this.setupSubjectEventListeners();
+    }
 
+    async loadSubjects() {
+        try {
+            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const data = await response.json();
+            console.log("API Subjects Response:", data);
+    
+            const subjects = data.data; 
+    
+            if (!Array.isArray(subjects)) {
+                console.error("Lỗi: API không trả về một mảng môn học!");
+                return;
+            }
+            
+            this.subjectsData = subjects;
+            
+            // Kiểm tra xem có phần tử tbody không
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Không tìm thấy phần tử #subjectTable tbody trong DOM");
+                return;
+            }
+            
+            tbody.innerHTML = subjects.map(subject => `
+                <tr data-id="${subject.subjectId}">
+                    <td>${subject.subjectName}</td>
+                    <td>
+                        <button class="btn-edit" data-id="${subject.subjectId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" data-id="${subject.subjectId}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách môn học:", error);
+            this.showNotification(
+                'error',
+                'Lỗi tải dữ liệu',
+                'Đã xảy ra lỗi khi tải danh sách môn học. Vui lòng thử lại sau.'
+            );
+        }
+    }
 
+    setupSubjectEventListeners() {
+        document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
+            this.openSubjectModal();
+        });
 
+        document.getElementById('searchSubject')?.addEventListener('input', (e) => {
+            this.searchSubjects(e.target.value);
+        });
+
+        // Xử lý sự kiện cho các nút trong bảng môn học
+        const subjectTable = document.querySelector('#subjectTable');
+        if (subjectTable) {
+            subjectTable.addEventListener('click', (e) => {
+                const target = e.target.closest('.btn-edit, .btn-delete');
+                if (!target) return;
+                
+                const subjectId = target.dataset.id || target.closest('tr').dataset.id;
+                if (!subjectId) return;
+                
+                if (target.classList.contains('btn-edit')) {
+                    console.log('Edit subject:', subjectId);
+                    this.openSubjectModal(subjectId);
+                } else if (target.classList.contains('btn-delete')) {
+                    console.log('Delete subject:', subjectId);
+                    this.deleteSubject(subjectId);
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+    }
+
+    openSubjectModal(subjectId = null) {
+        const modal = document.getElementById('subjectModal');
+        const form = document.getElementById('subjectForm');
+        const modalTitle = document.getElementById('subjectModalTitle');
+        
+
+        modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
+        
+        form.reset();
+        
+        // Thiết lập dữ liệu nếu là chỉnh sửa
+        if (subjectId) {
+            const subject = this.subjectsData.find(s => s.subjectId == subjectId);
+            if (subject) {
+                document.getElementById('subjectId').value = subject.subjectId;
+               
+                document.getElementById('subjectName').value = subject.subjectName || '';
+               
+            }
+        } else {
+            document.getElementById('subjectId').value = '';
+        }
+        
+        // Mở modal
+        this.openModal('subjectModal');
+    }
+
+    async saveSubject() {
+        const form = document.getElementById('subjectForm');
+        const formData = new FormData(form);
+        const subjectData = {};
+        
+        formData.forEach((value, key) => {
+            subjectData[key] = value;
+        });
+        
+        try {
+            console.log('Dữ liệu môn học:', subjectData);
+            // Xác thực dữ liệu
+            if (!subjectData.subjectName) {
+                throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+            }
+            
+            // Gọi hàm API để lưu dữ liệu
+            await this.saveSubjectRequest(subjectData);
+            
+            // Đóng modal
+            this.closeModal('subjectModal');
+            
+            // Cập nhật danh sách
+            await this.loadSubjects();
+            
+            // Hiển thị thông báo thành công
+            const isUpdate = subjectData.subjectId && subjectData.subjectId.trim() !== '';
+            this.showNotification(
+                'success',
+                isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                isUpdate ? 'Thông tin môn học đã được cập nhật.' : 'Môn học mới đã được thêm vào hệ thống.'
+            );
+        } catch (error) {
+            console.error('Lỗi khi lưu môn học:', error);
+            this.showNotification(
+                'error',
+                'Lỗi lưu dữ liệu',
+                error.message || 'Có lỗi xảy ra khi lưu môn học!'
+            );
+        }
+    }
+    
+    async saveSubjectRequest(subjectData) {
+        const params = new URLSearchParams({
+            id: subjectData.subjectId || "",
+           
+            sName: subjectData.subjectName,
+       
+        });
+
+        const isUpdating = Boolean(subjectData.subjectId);
+        const url = isUpdating
+            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateASubject?${params}`
+            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertASubject?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Lỗi ${isUpdating ? "cập nhật" : "tạo mới"} môn học: ${response.status}`);
+        
+        return response.json();
+    }
+
+    deleteSubject(subjectId) {
+        this.showConfirmation(
+            'Xác nhận xóa môn học',
+            'Bạn có chắc chắn muốn xóa môn học này không? Dữ liệu không thể khôi phục sau khi xóa.',
+            async () => {
+                try {
+                    await this.deleteSubjectRequest(subjectId);
+                    await this.loadSubjects();
+                    this.showNotification(
+                        'success',
+                        'Xóa môn học thành công',
+                        'Môn học đã được xóa khỏi hệ thống.'
+                    );
+                } catch (error) {
+                    console.error('Error deleting subject:', error);
+                    this.showNotification(
+                        'error',
+                        'Lỗi xóa môn học',
+                        'Đã xảy ra lỗi khi xóa môn học. Vui lòng thử lại sau.'
+                    );
+                }
+            }
+        );
+    }
+    
+    async deleteSubjectRequest(subjectId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteASubject?id=${subjectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa môn học: ${response.status}`);
+        }
+        
+        return true;
+    }
+
+    searchSubjects(query) {
+        try {
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Could not find subject table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in subject table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                // Get the text content of the subject name cell (first column)
+                const subjectName = row.cells[0]?.textContent.toLowerCase() || '';
+                
+                // Show/hide row based on search match
+                if (subjectName.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        } catch (error) {
+            console.error("Error in searchSubjects:", error);
+        }
+    }
+    
     async initializeAssignmentManagement() {
         await this.loadAssignments();
         this.setupAssignmentEventListeners();
@@ -1180,7 +1640,7 @@ class AdminDashboard {
                 const cohort = cohorts.find(c => c.cohortId === assignment.cohortId);
 
                 return `
-                    <tr>
+                    <tr data-id="${assignment.lessonClassId}">
                         <td>${teacher ? `${teacher.firstName} ${teacher.lastName}` : 'N/A'}</td>
                         <td>${subject ? subject.subjectName : 'N/A'}</td>
                         <td>${cohort ? cohort.cohortName : 'N/A'}</td>
@@ -1190,10 +1650,10 @@ class AdminDashboard {
                         <td>${assignment.endTime  || 'N/A'}</td>
                         <td>${assignment.dayOfWeek|| 'N/A'}</td>
                         <td>
-                            <button onclick="adminDashboard.openAssignmentModal('${assignment.lessonClassId}')" class="btn-edit">
+                            <button class="btn-edit" data-id="${assignment.lessonClassId}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="adminDashboard.deleteAssignment('${assignment.lessonClassId}')" class="btn-delete">
+                            <button class="btn-delete" data-id="${assignment.lessonClassId}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -1255,32 +1715,96 @@ class AdminDashboard {
             this.openAssignmentModal();
         });
 
-        document.getElementById('assignmentForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveAssignment();
-        });
-
         // Thêm tìm kiếm
         document.getElementById('searchAssignment')?.addEventListener('input', (e) => {
             this.searchAssignments(e.target.value);
         });
+
+        // Xử lý sự kiện cho các nút trong bảng phân công
+        const assignmentTable = document.querySelector('#assignmentTable');
+        if (assignmentTable) {
+            assignmentTable.addEventListener('click', (e) => {
+                const target = e.target.closest('.btn-edit, .btn-delete');
+                if (!target) return;
+                
+                const lessonClassId = target.dataset.id || target.closest('tr').dataset.id;
+                if (!lessonClassId) return;
+                
+                if (target.classList.contains('btn-edit')) {
+                    console.log('Edit assignment:', lessonClassId);
+                    this.openAssignmentModal(lessonClassId);
+                } else if (target.classList.contains('btn-delete')) {
+                    console.log('Delete assignment:', lessonClassId);
+                    this.deleteAssignment(lessonClassId);
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
     }
 
     async openAssignmentModal(lessonClassId) {
         const modal = document.getElementById('assignmentModal');
         const form = document.getElementById('assignmentForm');
         console.log("Lesson Class ID:", lessonClassId);
+        
+        // Get all date input fields from the form
+        const dateInputs = form.querySelectorAll('input[type="date"]');
+        console.log("Date input fields in form:", Array.from(dateInputs).map(el => el.name));
+        
         if (lessonClassId) {
             const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetLessonSchedulebyID?id=${lessonClassId}`);
             const assignmentArray = await response.json();
             const assignment = assignmentArray[0]; // Access the first item in the array
-            console.log("Lesson Class ID:", assignment.lessonClassId);
-        
+            console.log("Raw assignment data:", assignment);
+            
+            // Log all date fields in response
+            Object.keys(assignment).forEach(key => {
+                if (typeof assignment[key] === 'string' && assignment[key].includes('T')) {
+                    console.log(`Field "${key}" contains date value: ${assignment[key]}`);
+                }
+            });
+            
+            // First, try to map fields directly
             Object.keys(assignment).forEach(key => {
                 const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = assignment[key];
-                console.log("Key:", key, "Value:", assignment[key]);
+                if (input) {
+                    // Special handling for date fields
+                    if (key === "lessonDate" && input.type === "date") {
+                        if (assignment[key] && assignment[key].includes('T')) {
+                            input.value = assignment[key].split('T')[0];
+                        } else {
+                            input.value = assignment[key] || '';
+                        }
+                        console.log(`Set date field ${key} = ${input.value}`);
+                    } else {
+                        input.value = assignment[key] || '';
+                    }
+                }
             });
+            
+            // Special case - if startDay field exists but lessonDate isn't mapped
+            const startDayInput = form.querySelector('[name="startDay"]');
+            if (startDayInput && assignment.lessonDate) {
+                if (assignment.lessonDate.includes('T')) {
+                    startDayInput.value = assignment.lessonDate.split('T')[0];
+                } else {
+                    startDayInput.value = assignment.lessonDate;
+                }
+                console.log(`Set startDay = ${startDayInput.value} from lessonDate`);
+            }
+            
+            // Or the other way around
+            const lessonDateInput = form.querySelector('[name="lessonDate"]');
+            if (lessonDateInput && assignment.startDay) {
+                if (assignment.startDay.includes('T')) {
+                    lessonDateInput.value = assignment.startDay.split('T')[0];
+                } else {
+                    lessonDateInput.value = assignment.startDay;
+                }
+                console.log(`Set lessonDate = ${lessonDateInput.value} from startDay`);
+            }
         } else {
             form.reset();
         }
@@ -1330,8 +1854,11 @@ class AdminDashboard {
     }
 
     async deleteAssignment(lessonClassId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa phân công này?')) return;
-
+        try {
+            this.showConfirmation(
+                'Xác nhận xóa phân công',
+                'Bạn có chắc chắn muốn xóa phân công này không? Dữ liệu không thể khôi phục sau khi xóa.',
+                async () => {
         try {
             const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignedTeacher?lessonClassID=${lessonClassId}`, {
                 method: 'DELETE'
@@ -1340,20 +1867,43 @@ class AdminDashboard {
             if (!response.ok) throw new Error('Failed to delete assignment');
 
             await this.loadAssignments();
+                        this.showNotification(
+                            'success',
+                            'Xóa phân công thành công',
+                            'Phân công đã được xóa khỏi hệ thống.'
+                        );
         } catch (error) {
             console.error("Lỗi khi xóa phân công:", error);
-            alert("Không thể xóa phân công. Vui lòng thử lại.");
+                        this.showNotification(
+                            'error',
+                            'Lỗi xóa phân công',
+                            'Đã xảy ra lỗi khi xóa phân công. Vui lòng thử lại sau.'
+                        );
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error in deleteAssignment:', error);
         }
-        
-        return true;
     }
 
     searchAssignments(query) {
-        const rows = document.querySelectorAll('#assignmentTable tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
-        });
+        try {
+            const rows = document.querySelectorAll('#assignmentTable tbody tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in assignment table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchAssignments:", error);
+        }
     }
 
     async initializeAccountManagement() {
@@ -1437,6 +1987,98 @@ class AdminDashboard {
         // Trigger reflow
         modal.offsetHeight;
         modal.classList.add('show');
+        
+        // Add event listeners to close buttons
+        const closeButtons = modal.querySelectorAll('.modal-close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                this.closeModal(modalId);
+            });
+        });
+        
+        // Setup click outside modal to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal(modalId);
+            }
+        });
+        
+        // Đảm bảo form action được kết nối đúng
+        const form = modal.querySelector('form');
+        if (form) {
+            // Xóa bỏ tất cả event listeners cũ
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            
+            // Gắn event listener mới
+            switch(modalId) {
+                case 'studentModal':
+                    newForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                        this.saveStudent();
+                    });
+                    break;
+                case 'teacherModal':
+                    newForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveTeacher();
+                    });
+                    break;
+                case 'cohortModal':
+                    newForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveCohort();
+                    });
+                    break;
+                case 'subjectModal':
+                    newForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveSubject();
+                    });
+                    break;
+                case 'assignmentModal':
+                    newForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.saveAssignment();
+                    });
+                    break;
+            }
+            
+            // Đảm bảo submit được gọi khi nhấn nút có type="submit"
+            const submitButtons = newForm.querySelectorAll('button[type="submit"], input[type="submit"]');
+            submitButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    newForm.dispatchEvent(new Event('submit'));
+                });
+            });
+        }
+        
+        // Đảm bảo nút lưu được kết nối đúng (các nút không có type="submit")
+        const saveButtons = modal.querySelectorAll('.btn-save:not([type="submit"])');
+        saveButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                switch(modalId) {
+                    case 'studentModal':
+                        this.saveStudent();
+                        break;
+                    case 'teacherModal':
+                        this.saveTeacher();
+                        break;
+                    case 'cohortModal':
+                        this.saveCohort();
+                        break;
+                    case 'subjectModal':
+                        this.saveSubject();
+                        break;
+                    case 'assignmentModal':
+                        this.saveAssignment();
+                        break;
+                }
+            });
+        });
     }
 
     // Thêm event listeners cho đóng modal khi click ra ngoài
@@ -1537,6 +2179,35 @@ class AdminDashboard {
             });
         }
     }
+    setupModalCloseHandlers() {
+        // Add global handler for modal close buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-close')) {
+                // Find the parent modal
+                let modal = e.target.closest('.modal');
+                if (modal && modal.id) {
+                    this.closeModal(modal.id);
+                }
+            }
+        });
+    }
+
+    // Thêm phương thức deleteTeacherRequest
+    async deleteTeacherRequest(teacherId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa giáo viên: ${response.status}`);
+        }
+        
+        return true;
+    }
 
     /**
      * Hiển thị popup xác nhận với callback
@@ -1545,12 +2216,32 @@ class AdminDashboard {
      * @param {Function} onConfirm - Hàm callback khi người dùng xác nhận
      */
     showConfirmation(title, message, onConfirm) {
+        console.log('showConfirmation called:', title, message);
+        
+        // Đảm bảo popup hiển thị đúng
+        this.ensurePopupsExist();
+        
+        const confirmationPopup = document.getElementById('confirmationPopup');
         const confirmTitle = document.getElementById('confirmTitle');
         const confirmMessage = document.getElementById('confirmMessage');
         const confirmButton = document.getElementById('confirmButton');
-        const confirmationPopup = document.getElementById('confirmationPopup');
+        const cancelButton = document.getElementById('cancelButton');
         
-        if (confirmTitle && confirmMessage && confirmButton && confirmationPopup) {
+        // Kiểm tra xem các phần tử có tồn tại
+        if (!confirmationPopup || !confirmTitle || !confirmMessage || !confirmButton) {
+            console.error('Không tìm thấy các phần tử popup xác nhận:', { 
+                confirmationPopup, confirmTitle, confirmMessage, confirmButton 
+            });
+            
+            // Nếu không tìm thấy popup, dùng confirm thông thường
+            if (window.confirm(message)) {
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            }
+            return;
+        }
+        
             // Cập nhật nội dung
             confirmTitle.textContent = title || 'Xác nhận thao tác';
             confirmMessage.textContent = message || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
@@ -1561,24 +2252,59 @@ class AdminDashboard {
             
             // Thêm sự kiện click mới
             newConfirmButton.addEventListener('click', () => {
+            console.log('Confirm button clicked');
                 this.hideConfirmation();
                 if (typeof onConfirm === 'function') {
                     onConfirm();
                 }
             });
             
-            // Hiển thị popup
-            confirmationPopup.classList.add('show');
+        // Xử lý sự kiện hủy
+        if (cancelButton) {
+            const newCancelButton = cancelButton.cloneNode(true);
+            cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+            
+            newCancelButton.addEventListener('click', () => {
+                console.log('Cancel button clicked');
+                this.hideConfirmation();
+            });
         }
+        
+        // Áp dụng style trực tiếp để đảm bảo hiển thị
+        confirmationPopup.style.display = 'flex';
+        confirmationPopup.style.opacity = '1';
+        confirmationPopup.style.visibility = 'visible';
+        confirmationPopup.style.zIndex = '9999';
+            confirmationPopup.classList.add('show');
+        
+        // Debug thêm thông tin style
+        console.log('Popup confirmation displayed with styles:', {
+            display: window.getComputedStyle(confirmationPopup).display,
+            opacity: window.getComputedStyle(confirmationPopup).opacity,
+            visibility: window.getComputedStyle(confirmationPopup).visibility,
+            zIndex: window.getComputedStyle(confirmationPopup).zIndex
+        });
     }
 
     /**
      * Ẩn popup xác nhận
      */
     hideConfirmation() {
+        console.log('hideConfirmation called');
         const confirmationPopup = document.getElementById('confirmationPopup');
         if (confirmationPopup) {
+            // Xóa bỏ class và inline styles
             confirmationPopup.classList.remove('show');
+            confirmationPopup.style.opacity = '0';
+            confirmationPopup.style.visibility = 'hidden';
+            
+            // Đợi animation hoàn tất trước khi ẩn hoàn toàn
+            setTimeout(() => {
+                confirmationPopup.style.display = 'none';
+            }, 300);
+            console.log('Popup confirmation hidden');
+        } else {
+            console.error('Không tìm thấy phần tử confirmationPopup');
         }
     }
 
@@ -1590,14 +2316,29 @@ class AdminDashboard {
      * @param {Function} callback - Hàm callback khi đóng thông báo (optional)
      */
     showNotification(type, title, message, callback) {
+        console.log('showNotification called:', type, title, message);
+        
+        // Đảm bảo popup tồn tại
+        this.ensurePopupsExist();
+        
+        const notificationPopup = document.getElementById('notificationPopup');
         const notificationIcon = document.getElementById('notificationIcon');
         const notificationTitle = document.getElementById('notificationTitle');
         const notificationMessage = document.getElementById('notificationMessage');
         const okButton = document.getElementById('okButton');
-        const notificationPopup = document.getElementById('notificationPopup');
         
-        if (notificationIcon && notificationTitle && notificationMessage && okButton && notificationPopup) {
+        if (!notificationPopup || !notificationTitle || !notificationMessage || !okButton) {
+            console.error('Không tìm thấy các phần tử popup thông báo');
+            // Fallback to alert if popup elements don't exist
+            alert(`${title}: ${message}`);
+            if (typeof callback === 'function') {
+                callback();
+            }
+            return;
+        }
+        
             // Cập nhật icon theo loại thông báo
+        if (notificationIcon) {
             notificationIcon.className = 'popup-icon ' + (type || 'success');
             
             // Cập nhật icon
@@ -1616,6 +2357,7 @@ class AdminDashboard {
                     default: // success
                         iconElement.className = 'fas fa-check-circle';
                 }
+                }
             }
             
             // Cập nhật nội dung
@@ -1628,24 +2370,47 @@ class AdminDashboard {
             
             // Thêm sự kiện click mới
             newOkButton.addEventListener('click', () => {
+            console.log('OK button clicked');
                 this.hideNotification();
                 if (typeof callback === 'function') {
                     callback();
                 }
             });
             
-            // Hiển thị popup
+        // Áp dụng style trực tiếp để đảm bảo hiển thị
+        notificationPopup.style.display = 'flex';
+        notificationPopup.style.opacity = '1';
+        notificationPopup.style.visibility = 'visible';
+        notificationPopup.style.zIndex = '9999';
             notificationPopup.classList.add('show');
-        }
+        
+        console.log('Popup notification displayed with styles:', {
+            display: window.getComputedStyle(notificationPopup).display,
+            opacity: window.getComputedStyle(notificationPopup).opacity,
+            visibility: window.getComputedStyle(notificationPopup).visibility,
+            zIndex: window.getComputedStyle(notificationPopup).zIndex
+        });
     }
 
     /**
      * Ẩn popup thông báo
      */
     hideNotification() {
+        console.log('hideNotification called');
         const notificationPopup = document.getElementById('notificationPopup');
         if (notificationPopup) {
+            // Xóa bỏ class và inline styles
             notificationPopup.classList.remove('show');
+            notificationPopup.style.opacity = '0';
+            notificationPopup.style.visibility = 'hidden';
+            
+            // Đợi animation hoàn tất trước khi ẩn hoàn toàn
+            setTimeout(() => {
+                notificationPopup.style.display = 'none';
+            }, 300);
+            console.log('Popup notification hidden');
+        } else {
+            console.error('Không tìm thấy phần tử notificationPopup');
         }
     }
 
@@ -1683,19 +2448,43 @@ class AdminDashboard {
 
     // Thêm phương thức deleteStudentRequest 
     async deleteStudentRequest(studentId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`, {
+        console.log('Bắt đầu xóa học sinh với ID:', studentId);
+        const url = `https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`;
+        console.log('URL API xóa học sinh:', url);
+        
+        try {
+            const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
+            
+            console.log('Kết quả API xóa học sinh:', {
+                status: response.status,
+                statusText: response.statusText
+        });
 
         if (!response.ok) {
+                let errorMessage = `Lỗi xóa học sinh: ${response.status} ${response.statusText}`;
+                
+                try {
             const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa học sinh: ${response.status}`);
+                    console.error('Chi tiết lỗi từ API:', errorData);
+                    errorMessage = errorData.message || errorMessage;
+                } catch (jsonError) {
+                    console.error('Không thể đọc phản hồi lỗi dưới dạng JSON:', jsonError);
         }
         
+                throw new Error(errorMessage);
+            }
+            
+            console.log('Xóa học sinh thành công');
         return true;
+        } catch (error) {
+            console.error('Lỗi trong deleteStudentRequest:', error);
+            throw error;
+        }
     }
 
     // Thêm phương thức saveTeacherRequest
@@ -1729,7 +2518,7 @@ class AdminDashboard {
         return response.json();
     }
 
-    // Thêm phương thức deleteTeacherRequest
+    // Giữ lại phương thức này và xóa bỏ phương thức trùng lặp sau đó
     async deleteTeacherRequest(teacherId) {
         const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
             method: 'DELETE',
@@ -1746,544 +2535,284 @@ class AdminDashboard {
         return true;
     }
 
-    loadData() {
-        // Load students data from localStorage
-        const storedStudents = localStorage.getItem('students');
-        if (storedStudents) {
-            this.studentsData = JSON.parse(storedStudents);
-        } else {
-            // Default data
-            this.studentsData = [
-                { id: 1, firstName: 'Nguyễn', lastName: 'Văn A', email: 'vana@example.com', gender: 'Nam', address: 'Hà Nội', dob: '2005-05-15', phone: '0987654321', password: 'password123', cohortId: 1 }
-            ];
-            localStorage.setItem('students', JSON.stringify(this.studentsData));
-        }
+    // Kiểm tra và thêm các popup nếu chưa tồn tại
+    ensurePopupsExist() {
+        console.log('Checking if popups exist...');
         
-        // Load teachers data from localStorage
-        const storedTeachers = localStorage.getItem('teachers');
-        if (storedTeachers) {
-            this.teachersData = JSON.parse(storedTeachers);
-        } else {
-            // Default data
-            this.teachersData = [
-                { id: 1, firstName: 'Trần', lastName: 'Thị B', email: 'thib@example.com', gender: 'Nữ', address: 'TP HCM', dob: '1985-03-20', phone: '0987654322', password: 'password456' }
-            ];
-            localStorage.setItem('teachers', JSON.stringify(this.teachersData));
-        }
-        
-        // Load cohorts data from localStorage
-        const storedCohorts = localStorage.getItem('cohorts');
-        if (storedCohorts) {
-            this.cohortsData = JSON.parse(storedCohorts);
-        } else {
-            // Default data
-            this.cohortsData = [
-                { id: 1, name: '12A1', description: 'Lớp chuyên Toán' }
-            ];
-            localStorage.setItem('cohorts', JSON.stringify(this.cohortsData));
-        }
-        
-        // Load subjects data from localStorage
-        const storedSubjects = localStorage.getItem('subjects');
-        if (storedSubjects) {
-            this.subjectsData = JSON.parse(storedSubjects);
-        } else {
-            // Default data
-            this.subjectsData = [
-                { id: 1, name: 'Toán học', code: 'MATH', description: 'Môn Toán học', credits: 4 },
-                { id: 2, name: 'Vật lý', code: 'PHY', description: 'Môn Vật lý', credits: 3 },
-                { id: 3, name: 'Hóa học', code: 'CHEM', description: 'Môn Hóa học', credits: 3 }
-            ];
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-        }
-        
-        // Load assignments data from localStorage
-        const storedAssignments = localStorage.getItem('assignments');
-        if (storedAssignments) {
-            this.assignmentsData = JSON.parse(storedAssignments);
-        } else {
-            // Default data
-            this.assignmentsData = [
-                { id: 1, teacherId: 1, subjectId: 1, cohortId: 1, schedule: 'Thứ 2, 7:00 - 9:30', status: 'active' }
-            ];
-            localStorage.setItem('assignments', JSON.stringify(this.assignmentsData));
-        }
-    }
-
-    initPageHandlers() {
-        const menuItems = document.querySelectorAll('.sidebar li');
-        const pageContent = document.getElementById('pageContent');
-        
-        // Xử lý click menu
-        menuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // Remove active class from all items
-                menuItems.forEach(i => i.classList.remove('active'));
-                
-                // Add active class to clicked item
-                item.classList.add('active');
-                
-                // Get page name from data attribute
-                const pageName = item.getAttribute('data-page');
-                
-                // Update page content
-                this.loadPage(pageName);
-            });
-        });
-        
-        // Load default page
-        const defaultPage = 'dashboard';
-        this.loadPage(defaultPage);
-    }
-
-    renderSubjectsPage() {
-        const pageContent = document.getElementById('pageContent');
-        
-        let html = `
-        <div class="subjects-management">
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-book"></i> Quản lý môn học</h3>
-                </div>
-                <div class="card-body">
-                    <div class="actions-bar" style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                        <button id="addSubjectBtn" class="btn-primary">
-                            <i class="fas fa-plus"></i> Thêm môn học mới
-                        </button>
-                        <div class="search-box">
-                            <input type="text" id="subjectSearchInput" placeholder="Tìm kiếm môn học...">
-                            <i class="fas fa-search"></i>
+        // Kiểm tra popup xác nhận
+        if (!document.getElementById('confirmationPopup')) {
+            console.log('Adding confirmation popup to the DOM');
+            const confirmationHTML = `
+                <div id="confirmationPopup" class="popup-overlay">
+                    <div class="popup-content">
+                        <div class="popup-header">
+                            <h3 id="confirmTitle">Xác nhận thao tác</h3>
+                            <button class="popup-close">&times;</button>
+                        </div>
+                        <div class="popup-body">
+                            <p id="confirmMessage">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+                        </div>
+                        <div class="popup-footer">
+                            <button id="confirmButton" class="btn-confirm">Xác nhận</button>
+                            <button id="cancelButton" class="btn-cancel">Hủy bỏ</button>
                         </div>
                     </div>
-                    <div class="table-container">
-                        <table id="subjectTable">
-                            <thead>
-                                <tr>
-                                    <th>Mã môn học</th>
-                                    <th>Tên môn học</th>
-                                    <th>Mô tả</th>
-                                    <th>Số tín chỉ</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-        
-        // Generate table rows
-        this.subjectsData.forEach(subject => {
-            html += `
-                <tr>
-                    <td>${subject.code}</td>
-                    <td>${subject.name}</td>
-                    <td>${subject.description}</td>
-                    <td>${subject.credits}</td>
-                    <td>
-                        <button class="btn-edit" data-id="${subject.id}"><i class="fas fa-edit"></i></button>
-                        <button class="btn-delete" data-id="${subject.id}"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>`;
-        });
-        
-        html += `
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Subject Modal -->
-        <div class="modal" id="subjectModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="subjectModalTitle">Thêm môn học mới</h3>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="subjectForm">
-                            <input type="hidden" id="subjectId">
-                            <div class="form-group">
-                                <label for="subjectCode">Mã môn học</label>
-                                <input type="text" id="subjectCode" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectName">Tên môn học</label>
-                                <input type="text" id="subjectName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectDescription">Mô tả</label>
-                                <input type="text" id="subjectDescription">
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectCredits">Số tín chỉ</label>
-                                <input type="number" id="subjectCredits" min="1" max="10" required>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary modal-close">Hủy</button>
-                        <button class="btn btn-primary" id="saveSubjectBtn">Lưu</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        
-        pageContent.innerHTML = html;
-        
-        // Set up event handlers
-        this.setupSubjectEventHandlers();
-    }
-    
-    setupSubjectEventHandlers() {
-        const addSubjectBtn = document.getElementById('addSubjectBtn');
-        const subjectModal = document.getElementById('subjectModal');
-        const closeButtons = subjectModal.querySelectorAll('.modal-close');
-        const saveSubjectBtn = document.getElementById('saveSubjectBtn');
-        const searchInput = document.getElementById('subjectSearchInput');
-        
-        // Add subject button click
-        addSubjectBtn.addEventListener('click', () => {
-            document.getElementById('subjectModalTitle').textContent = 'Thêm môn học mới';
-            document.getElementById('subjectForm').reset();
-            document.getElementById('subjectId').value = '';
-            subjectModal.classList.add('show');
-        });
-        
-        // Close modal
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                subjectModal.classList.remove('show');
-            });
-        });
-        
-        // Save subject
-        saveSubjectBtn.addEventListener('click', () => {
-            const subjectId = document.getElementById('subjectId').value;
-            const code = document.getElementById('subjectCode').value;
-            const name = document.getElementById('subjectName').value;
-            const description = document.getElementById('subjectDescription').value;
-            const credits = document.getElementById('subjectCredits').value;
+            `;
+            document.body.insertAdjacentHTML('beforeend', confirmationHTML);
             
-            if (!code || !name || !credits) {
-                alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
-                return;
+            // Thêm style cho popup với !important để đảm bảo không bị ghi đè
+            if (!document.getElementById('popupStyles')) {
+                const popupStyles = `
+                    <style id="popupStyles">
+                        .popup-overlay {
+                            display: none;
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100% !important;
+                            height: 100% !important;
+                            background-color: rgba(0, 0, 0, 0.7) !important;
+                            z-index: 99999 !important;
+                            justify-content: center !important;
+                            align-items: center !important;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        }
+                        .popup-overlay.show {
+                            opacity: 1 !important;
+                            display: flex !important;
+                            visibility: visible !important;
+                        }
+                        .popup-content {
+                            background-color: white !important;
+                            border-radius: 5px !important;
+                            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+                            width: 400px !important;
+                            max-width: 90% !important;
+                            margin: auto !important;
+                            animation: popIn 0.3s ease !important;
+                            position: relative !important;
+                            z-index: 100000 !important;
+                        }
+                        @keyframes popIn {
+                            0% { transform: scale(0.5); opacity: 0; }
+                            100% { transform: scale(1); opacity: 1; }
+                        }
+                        .popup-header {
+                            display: flex !important;
+                            justify-content: space-between !important;
+                            align-items: center !important;
+                            padding: 15px 20px !important;
+                            border-bottom: 1px solid #eee !important;
+                            background-color: #f8f9fa !important;
+                            border-radius: 5px 5px 0 0 !important;
+                        }
+                        .popup-body {
+                            padding: 20px !important;
+                        }
+                        .popup-footer {
+                            padding: 15px 20px !important;
+                            border-top: 1px solid #eee !important;
+                            display: flex !important;
+                            justify-content: flex-end !important;
+                            gap: 10px !important;
+                            background-color: #f8f9fa !important;
+                            border-radius: 0 0 5px 5px !important;
+                        }
+                        .btn-confirm {
+                            background-color: #4B91F1 !important;
+                            color: white !important;
+                            border: none !important;
+                            padding: 8px 15px !important;
+                            border-radius: 4px !important;
+                            cursor: pointer !important;
+                            font-weight: bold !important;
+                        }
+                        .btn-confirm:hover {
+                            background-color: #3a7bd5 !important;
+                        }
+                        .btn-cancel {
+                            background-color: #6c757d !important;
+                            color: white !important;
+                            border: none !important;
+                            padding: 8px 15px !important;
+                            border-radius: 4px !important;
+                            cursor: pointer !important;
+                        }
+                        .btn-cancel:hover {
+                            background-color: #5a6268 !important;
+                        }
+                        .popup-close {
+                            background: none !important;
+                            border: none !important;
+                            font-size: 24px !important;
+                            cursor: pointer !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
+                            line-height: 1 !important;
+                        }
+                        
+                        /* Thêm style cho icon */
+                        .popup-icon {
+                            display: flex !important;
+                            justify-content: center !important;
+                            margin-bottom: 15px !important;
+                            font-size: 32px !important;
+                        }
+                        .popup-icon.success i { color: #28a745 !important; }
+                        .popup-icon.error i { color: #dc3545 !important; }
+                        .popup-icon.warning i { color: #ffc107 !important; }
+                        .popup-icon.info i { color: #17a2b8 !important; }
+                    </style>
+                `;
+                document.head.insertAdjacentHTML('beforeend', popupStyles);
             }
             
-            if (subjectId) {
-                // Update existing subject
-                const index = this.subjectsData.findIndex(s => s.id == subjectId);
-                if (index !== -1) {
-                    this.subjectsData[index] = {
-                        ...this.subjectsData[index],
-                        code,
-                        name,
-                        description,
-                        credits: parseInt(credits)
-                    };
-                }
-            } else {
-                // Add new subject
-                const newId = this.subjectsData.length > 0 ? Math.max(...this.subjectsData.map(s => s.id)) + 1 : 1;
-                this.subjectsData.push({
-                    id: newId,
-                    code,
-                    name,
-                    description,
-                    credits: parseInt(credits)
+            // Thêm sự kiện cho nút đóng popup
+            const closeBtn = document.querySelector('#confirmationPopup .popup-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    this.hideConfirmation();
                 });
             }
-            
-            // Save to localStorage
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-            
-            // Reload page
-            this.renderSubjectsPage();
-            
-            // Hide modal
-            subjectModal.classList.remove('show');
-            
-            // Show success notification
-            showNotification('Môn học đã được lưu thành công!', 'success');
-        });
-        
-        // Edit subject buttons
-        const editButtons = document.querySelectorAll('#subjectTable .btn-edit');
-        editButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const subjectId = button.getAttribute('data-id');
-                const subject = this.subjectsData.find(s => s.id == subjectId);
-                
-                if (subject) {
-                    document.getElementById('subjectModalTitle').textContent = 'Chỉnh sửa môn học';
-                    document.getElementById('subjectId').value = subject.id;
-                    document.getElementById('subjectCode').value = subject.code;
-                    document.getElementById('subjectName').value = subject.name;
-                    document.getElementById('subjectDescription').value = subject.description || '';
-                    document.getElementById('subjectCredits').value = subject.credits;
-                    
-                    subjectModal.classList.add('show');
-                }
-            });
-        });
-        
-        // Delete subject buttons
-        const deleteButtons = document.querySelectorAll('#subjectTable .btn-delete');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const subjectId = button.getAttribute('data-id');
-                
-                // Show confirmation dialog
-                showConfirmation('Bạn có chắc chắn muốn xóa môn học này?', () => {
-                    this.subjectsData = this.subjectsData.filter(s => s.id != subjectId);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-                    
-                    // Reload page
-                    this.renderSubjectsPage();
-                    
-                    // Show success notification
-                    showNotification('Môn học đã được xóa thành công!', 'success');
-                });
-            });
-        });
-        
-        // Search functionality
-        searchInput.addEventListener('input', () => {
-            const searchText = searchInput.value.toLowerCase();
-            const rows = document.querySelectorAll('#subjectTable tbody tr');
-            
-            rows.forEach(row => {
-                const code = row.cells[0].textContent.toLowerCase();
-                const name = row.cells[1].textContent.toLowerCase();
-                const description = row.cells[2].textContent.toLowerCase();
-                
-                if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    async initializeSubjectManagement() {
-        await this.loadSubjects();
-        this.setupSubjectEventListeners();
-    }
-
-    async loadSubjects() {
-        try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
-            const data = await response.json();
-            console.log("API Subjects Response:", data);
-    
-            const subjects = data.data; 
-    
-            if (!Array.isArray(subjects)) {
-                console.error("Lỗi: API không trả về một mảng môn học!");
-                return;
-            }
-            
-            // Lưu dữ liệu môn học để sử dụng sau này
-            this.subjectsData = subjects;
-            
-            // Cập nhật bảng
-            const tbody = document.querySelector('#subjectTable tbody');
-            tbody.innerHTML = subjects.map(subject => `
-                <tr>
-                    <td>${subject.code || '-'}</td>
-                    <td>${subject.name}</td>
-                    <td>${subject.description || '-'}</td>
-                    <td>${subject.credits}</td>
-                    <td>
-                        <button onclick="adminDashboard.openSubjectModal('${subject.subjectId}')" class="btn-edit" data-id="${subject.subjectId}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="adminDashboard.deleteSubject('${subject.subjectId}')" class="btn-delete" data-id="${subject.subjectId}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error("Lỗi khi tải danh sách môn học:", error);
-            this.showNotification(
-                'error',
-                'Lỗi tải dữ liệu',
-                'Đã xảy ra lỗi khi tải danh sách môn học. Vui lòng thử lại sau.'
-            );
         }
-    }
-
-    setupSubjectEventListeners() {
-        document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
-            this.openSubjectModal();
-        });
-
-        document.getElementById('subjectForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveSubject();
-        });
-
-        // Thêm sự kiện tìm kiếm
-        document.getElementById('searchSubject')?.addEventListener('input', (e) => {
-            this.searchSubjects(e.target.value);
-        });
-    }
-
-    openSubjectModal(subjectId = null) {
-        const modal = document.getElementById('subjectModal');
-        const form = document.getElementById('subjectForm');
-        const modalTitle = document.getElementById('subjectModalTitle');
         
-        // Đặt tiêu đề modal
-        modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
-        
-        // Reset form
-        form.reset();
-        
-        // Thiết lập dữ liệu nếu là chỉnh sửa
-        if (subjectId) {
-            const subject = this.subjectsData.find(s => s.subjectId == subjectId);
-            if (subject) {
-                document.getElementById('subjectId').value = subject.subjectId;
-                document.getElementById('subjectCode').value = subject.code || '';
-                document.getElementById('subjectName').value = subject.name || '';
-                document.getElementById('subjectDescription').value = subject.description || '';
-                document.getElementById('subjectCredits').value = subject.credits || '';
+        // Kiểm tra popup thông báo
+        if (!document.getElementById('notificationPopup')) {
+            console.log('Adding notification popup to the DOM');
+            const notificationHTML = `
+                <div id="notificationPopup" class="popup-overlay">
+                    <div class="popup-content">
+                        <div class="popup-header">
+                            <h3 id="notificationTitle">Thông báo</h3>
+                            <button class="popup-close">&times;</button>
+                        </div>
+                        <div class="popup-body">
+                            <div class="popup-icon success" id="notificationIcon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <p id="notificationMessage">Thao tác đã hoàn tất.</p>
+                        </div>
+                        <div class="popup-footer">
+                            <button id="okButton" class="btn-confirm">OK</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', notificationHTML);
+            
+            // Thêm sự kiện cho nút đóng popup
+            const closeBtn = document.querySelector('#notificationPopup .popup-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    this.hideNotification();
+                });
             }
+        }
+        
+        console.log('Popup check completed');
+    }
+
+    // Thêm phương thức kiểm tra trạng thái popup
+    checkPopupStatus() {
+        console.log('Checking popup status...');
+        
+        const confirmationPopup = document.getElementById('confirmationPopup');
+        const notificationPopup = document.getElementById('notificationPopup');
+        
+        if (confirmationPopup) {
+            const style = window.getComputedStyle(confirmationPopup);
+            console.log('Confirmation popup status:', {
+                exists: true,
+                display: style.display,
+                opacity: style.opacity,
+                visibility: style.visibility,
+                zIndex: style.zIndex,
+                hasClassShow: confirmationPopup.classList.contains('show')
+            });
         } else {
-            document.getElementById('subjectId').value = '';
+            console.log('Confirmation popup does not exist');
         }
         
-        // Mở modal
-        this.openModal('subjectModal');
-    }
-
-    async saveSubject() {
-        const form = document.getElementById('subjectForm');
-        const formData = new FormData(form);
-        const subjectData = {};
-        
-        formData.forEach((value, key) => {
-            subjectData[key] = value;
-        });
-        
-        try {
-            // Xác thực dữ liệu
-            if (!subjectData.code || !subjectData.name || !subjectData.credits) {
-                throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
-            }
-            
-            // Gọi hàm API để lưu dữ liệu
-            await this.saveSubjectRequest(subjectData);
-            
-            // Đóng modal
-            this.closeModal('subjectModal');
-            
-            // Cập nhật danh sách
-            await this.loadSubjects();
-            
-            // Hiển thị thông báo thành công
-            const isUpdate = subjectData.subjectId && subjectData.subjectId.trim() !== '';
-            this.showNotification(
-                'success',
-                isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
-                isUpdate ? 'Thông tin môn học đã được cập nhật.' : 'Môn học mới đã được thêm vào hệ thống.'
-            );
-        } catch (error) {
-            console.error('Lỗi khi lưu môn học:', error);
-            this.showNotification(
-                'error',
-                'Lỗi lưu dữ liệu',
-                error.message || 'Có lỗi xảy ra khi lưu môn học!'
-            );
+        if (notificationPopup) {
+            const style = window.getComputedStyle(notificationPopup);
+            console.log('Notification popup status:', {
+                exists: true,
+                display: style.display,
+                opacity: style.opacity,
+                visibility: style.visibility,
+                zIndex: style.zIndex,
+                hasClassShow: notificationPopup.classList.contains('show')
+            });
+        } else {
+            console.log('Notification popup does not exist');
         }
     }
     
-    async saveSubjectRequest(subjectData) {
-        const params = new URLSearchParams({
-            id: subjectData.subjectId || "",
-            code: subjectData.code,
-            name: subjectData.name,
-            description: subjectData.description || "",
-            credits: subjectData.credits
-        });
-
-        const isUpdating = Boolean(subjectData.subjectId);
-        const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateSubject?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertSubject?${params}`;
-
-        const method = isUpdating ? "PUT" : "POST";
-
-        const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error(`Lỗi ${isUpdating ? "cập nhật" : "tạo mới"} môn học: ${response.status}`);
+    // Phương thức hiển thị popup trực tiếp không thông qua animation
+    forceShowConfirmation(title, message, onConfirm) {
+        console.log('forceShowConfirmation called');
         
-        return response.json();
-    }
-
-    deleteSubject(subjectId) {
-        this.showConfirmation(
-            'Xác nhận xóa môn học',
-            'Bạn có chắc chắn muốn xóa môn học này không? Dữ liệu không thể khôi phục sau khi xóa.',
-            async () => {
-                try {
-                    await this.deleteSubjectRequest(subjectId);
-                    await this.loadSubjects();
-                    this.showNotification(
-                        'success',
-                        'Xóa môn học thành công',
-                        'Môn học đã được xóa khỏi hệ thống.'
-                    );
-                } catch (error) {
-                    console.error('Error deleting subject:', error);
-                    this.showNotification(
-                        'error',
-                        'Lỗi xóa môn học',
-                        'Đã xảy ra lỗi khi xóa môn học. Vui lòng thử lại sau.'
-                    );
-                }
+        // Đảm bảo popup tồn tại
+        this.ensurePopupsExist();
+        
+        // Lấy tham chiếu đến các phần tử popup
+        const popup = document.getElementById('confirmationPopup');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const confirmBtn = document.getElementById('confirmButton');
+        const cancelBtn = document.getElementById('cancelButton');
+        
+        if (!popup || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
+            console.error('Popup elements not found, falling back to confirm');
+            if (window.confirm(message)) {
+                onConfirm();
             }
-        );
-    }
-    
-    async deleteSubjectRequest(subjectId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteSubject?id=${subjectId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa môn học: ${response.status}`);
+            return;
         }
         
-        return true;
-    }
-
-    searchSubjects(query) {
-        const rows = document.querySelectorAll('#subjectTable tbody tr');
-        const searchText = query.toLowerCase();
+        // Cập nhật nội dung
+        titleEl.textContent = title;
+        messageEl.textContent = message;
         
-        rows.forEach(row => {
-            const code = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            const description = row.cells[2].textContent.toLowerCase();
-            
-            if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
+        // Tạo các phần tử mới để gắn sự kiện
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        
+        // Gắn sự kiện
+        newConfirmBtn.onclick = () => {
+            console.log('Confirm button clicked (forced)');
+            this.hideConfirmation();
+            onConfirm();
+        };
+        
+        newCancelBtn.onclick = () => {
+            console.log('Cancel button clicked (forced)');
+            this.hideConfirmation();
+        };
+        
+        // Hiển thị popup với style inline trực tiếp
+        popup.style.cssText = `
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            z-index: 99999 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+        `;
+        
+        // Log thông tin
+        setTimeout(() => {
+            this.checkPopupStatus();
+        }, 50);
     }
 }
 

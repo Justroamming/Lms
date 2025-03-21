@@ -76,4 +76,14 @@ const logout = () => {
 
 const checkAuth = (role) => getCurrentUser()?.role === role;
 
+// Hàm cập nhật thông tin người dùng hiện tại và làm mới giao diện
+const updateCurrentUser = (userData) => {
+    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+    
+    // Kiểm tra nếu đang ở trang teacher-dashboard và đã có instance của TeacherNavigation
+    if (window.navigationInstance && typeof window.navigationInstance.displayTeacherName === 'function') {
+        window.navigationInstance.displayTeacherName();
+    }
+};
+
 document.addEventListener('DOMContentLoaded', initializeData);

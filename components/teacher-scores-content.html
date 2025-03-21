@@ -1,84 +1,91 @@
-<!DOCTYPE html>
-<body>
-    <div class="scores-content">
-        <div class="score-actions">
-            <button class="btn btn-primary" onclick="scoreManager.openAddScoreModal()">
-                <i class="fas fa-plus"></i> Thêm điểm
-            </button>
-            <select id="classFilter">
-                <option value="">Tất cả lớp</option>
-                <!-- Các lớp sẽ được thêm bằng JavaScript -->
-            </select>
-        </div>
+<div class="scores-content">
+    <div class="score-actions">
+        <button class="btn btn-primary" onclick="window.TeacherScores.openAddScoreModal()">
+            <i class="fas fa-plus"></i> Thêm điểm
+        </button>
+        <select id="classFilter">
+            <option value="">Chọn lớp học</option>
+            
+            <!-- Các lớp sẽ được thêm bằng JavaScript -->
+        </select>
+    </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-edit"></i> Bảng Điểm</h3>
-            </div>
-            <div class="table-container">
-                <table id="scoreTable">
-                    <thead>
-                        <tr>
-                            <th>Họ và tên</th>
-                            <th>Lớp</th>
-                            <th>Môn học</th>
-                            <th>Loại điểm</th>
-                            <th>Điểm số</th>
-                            <th>Ngày nhập</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
-                    </tbody>
-                </table>
-            </div>
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-edit"></i> Bảng Điểm</h3>
         </div>
-
-        <!-- Modal Thêm/Sửa Điểm -->
-        <div id="scoreModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="modalTitle">Thêm Điểm Mới</h3>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="scoreForm">
-                    <input type="hidden" id="scoreId">
-                    <div class="form-group">
-                        <label for="studentSelect">Học sinh</label>
-                        <select id="studentSelect" required>
-                            <option value="">Chọn học sinh</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subject">Môn học</label>
-                        <select id="subject" required>
-                            <option value="">Chọn Môn Học</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="scoreType">Loại điểm</label>
-                        <select id="scoreType" required>
-                            <option value="Component Score">Điểm thành phần</option>
-                            <option value="MidTerm">Giữa kỳ</option>
-                            <option value="Final">Cuối kỳ</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="scoreValue">Điểm số</label>
-                        <input type="number" id="scoreValue" required min="0" max="10" step="0.1">
-                    </div>
-                    <div class="form-group">
-                        <label for="scoreDate">Ngày nhập</label>
-                        <input type="date" id="scoreDate" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Lưu</button>
-                        <button type="button" class="btn btn-secondary" onclick="scoreManager.closeModal()">Hủy</button>
-                    </div>
-                </form>
-            </div>
+        <div class="table-container">
+            <table id="scoreTable">
+                <thead>
+                    <tr>
+                        <th>Họ và tên</th>
+                        <th>Lớp</th>
+                        <th>Môn học</th>
+                        <th>Loại điểm</th>
+                        <th>Điểm số</th>
+                        <th>Hệ số</th>
+                        <th>Ngày kiểm tra</th>
+                        <th>Ngày nhập điểm</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Modal Thêm/Sửa Điểm -->
+    <div id="scoreModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Thêm Điểm Mới</h3>
+                <span class="close" onclick="window.TeacherScores.closeModal()">&times;</span>
+            </div>
+            <form id="scoreForm">
+                <input type="hidden" id="gradeID">
+                <div class="form-group">
+                    <label for="studentID">Học sinh</label>
+                    <select id="studentID" required>
+                        <option value="">Chọn học sinh</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjectID">Môn học</label>
+                    <select id="subjectID" required>
+                        <option value="">Chọn Môn Học</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="testType">Loại điểm</label>
+                    <select id="testType" required>
+                        <option value="Component Score">Điểm thành phần</option>
+                        <option value="MidTerm">Giữa kỳ</option>
+                        <option value="Final">Cuối kỳ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="score">Điểm số</label>
+                    <input type="number" id="score" required min="0" max="10" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="weight">Hệ số</label>
+                    <input type="number" id="weight" required min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="testDate">Ngày kiểm tra</label>
+                    <input type="date" id="testDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="gradeDate">Ngày nhập điểm</label>
+                    <input type="date" id="gradeDate" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.TeacherScores.closeModal()">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

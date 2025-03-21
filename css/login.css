@@ -79,10 +79,6 @@ body::before {
     animation: glowAnimation 5s infinite ease-in-out;
 }
 
-.login-box:hover {
-    transform: perspective(1000px) rotateY(2deg);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
 
 /* Hiệu ứng đường viền cho form */
 .login-box::before {
@@ -92,7 +88,29 @@ body::before {
     left: 0;
     width: 6px;
     height: 100%;
-    background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
+    background: linear-gradient(
+        to bottom,
+        var(--primary-color),
+        var(--primary-light),
+        #ff00de,
+        #ff66e5,
+        #00ff88,
+        #66ffb5,
+        #00a1ff,
+        #66c7ff,
+        var(--primary-color)
+    );
+    background-size: 100% 800%;
+    animation: smoothColorChange 10s infinite linear;
+}
+
+@keyframes smoothColorChange {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 0% 100%;
+    }
 }
 
 .login-header {
@@ -108,7 +126,34 @@ body::before {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     animation: titleBounce 0.8s ease-out;
 }
+.Backhome {
+    background: linear-gradient(90deg, #6C5CE7, #8A7EEA);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    transition: all 0.3s ease;
+    display: block;
+    margin: 5px auto 15px;
+    text-align: center;
+    position: center;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    width: fit-content;
+}
 
+.Backhome:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(108, 92, 231, 0.45);
+}
+
+.Backhome:active {
+    transform: translateY(1px);
+}
 .login-header p {
     color: var(--light-text-color);
     font-size: 19px;
@@ -721,14 +766,6 @@ select option {
     font-size: 26px;
     animation: float 22s infinite ease-in-out;
     animation-delay: 3s;
-}
-.Backhome{
-    text-decoration: none;
-    color: black;
-    font-size: 14px;
-    margin-top: 10px;
-    display: block;
-    text-align: center;
 }
 
 /* Thêm hiệu ứng nhấp nháy cho form */

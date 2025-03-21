@@ -19,7 +19,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             localStorage.setItem('currentStudent', JSON.stringify(student));
             window.location.href = 'student-dashboard.html';
         } else {
-            alert('Email hoặc mật khẩu không đúng!');
+            alert('Email, mật khẩu hoặc không đúng!');
         }
     } catch (error) {
         console.error('Error:', error);

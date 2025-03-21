@@ -10,9 +10,11 @@
 
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, #0ae1bd, #8c00ff);
+    background: linear-gradient(145deg, #3a0ca3, #4361ee, #4cc9f0);
+    background-size: 200% 200%;
+    animation: gradientWave 15s ease infinite;
     color: white;
-    padding: 1.25rem 1rem;
+    padding: 0;
     flex-shrink: 0; /* Prevent shrinking */
     height: 100vh; /* Make sidebar full height */
     position: fixed; /* Fix position to left */
@@ -20,42 +22,185 @@
     top: 0;
     bottom: 0;
     overflow-y: auto; /* Allow scrolling if needed */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 100;
 }
 
+@keyframes gradientWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 100px),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 100px);
+    z-index: -1;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.logo {
+    padding: 1.5rem 1.5rem;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
 
 .logo h2 {
     margin: 0;
-    padding: 0.75rem 0;
+    padding: 0;
     text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
     color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    position: relative;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.logo h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+}
+
+.logo h2 i {
+    margin-right: 10px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .sidebar ul {
     list-style: none;
-    padding: 0;
-    margin: 1.25rem 0;
+    padding: 0 1rem;
+    margin: 1.5rem 0;
 }
 
 .sidebar li {
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
+    padding: 0;
+    margin: 0.25rem 0;
     cursor: pointer;
-    border-radius: 0.375rem;
+    border-radius: 10px;
     transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar li::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
+    transition: all 0.4s ease;
+    z-index: 0;
+}
+
+.sidebar li:hover::before {
+    left: 0;
 }
 
 .sidebar li:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
 }
 
 .sidebar li.active {
-    background: #3949ab;
+    background: rgba(255, 255, 255, 0.2);
+    border-left: 4px solid #ffffff;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateX(5px);
+}
+
+.sidebar li.active::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background-color: #ffffff;
+    border-radius: 50%;
 }
 
 .sidebar li i {
-    margin-right: 0.5rem;
+    margin-right: 0.8rem;
     width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.sidebar li {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar li:hover i {
+    transform: scale(1.2);
+    color: white;
+}
+
+.sidebar li.active i {
+    color: white;
 }
 
 
@@ -723,22 +868,48 @@ canvas#studentDistributionChart {
     
     .sidebar {
         position: fixed;
-        left: -250px;
+        left: -290px; /* Start off-screen */
         top: 0;
         height: 100%;
         z-index: 1000;
         transition: left 0.3s ease;
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        width: 280px; /* Ensure width is set */
     }
     
     .sidebar.open {
-        left: 0;
+        left: 0; /* Move on-screen when open class is added */
     }
     
     .main-content {
         width: 100%;
         margin-left: 0;
         padding: 0.5rem;
+    }
+    
+    /* Show menu toggle on mobile */
+    .menu-toggle {
+        display: flex !important; /* Force display */
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+    
+    /* Overlay for sidebar */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
     }
     
     /* Điều chỉnh topbar */
@@ -940,12 +1111,108 @@ canvas#studentDistributionChart {
     }
 }
 
+/* Improved menu toggle positioning and appearance */
+@media (max-width: 768px) {
+    .topbar {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: white;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .menu-toggle {
+        position: relative;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 24px;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 4px;
+        z-index: 1001;
+    }
+    
+    .menu-toggle:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+    
+    /* Ensure sidebar has proper z-index */
+    .sidebar {
+        z-index: 1001;  /* Higher than overlay */
+        width: 250px;   /* Slightly smaller to ensure it fits */
+    }
+    
+    .overlay {
+        z-index: 1000; /* Lower than sidebar but higher than content */
+    }
+    
+    /* Ensure sidebar slides properly */
+    .sidebar.open {
+        left: 0;
+        box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+    }
+}
+
+/* Fix for mobile scrolling issues */
+@media (max-width: 768px) {
+    body, html {
+        overflow-x: hidden;
+        height: 100%;
+        position: relative;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dashboard {
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: visible;
+        position: relative;
+    }
+
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 0.5rem;
+        overflow-y: visible;
+        overflow-x: hidden;
+        height: auto;
+        box-sizing: border-box;
+    }
+
+    /* Fix for content height issues */
+    #pageContent {
+        overflow-x: hidden;
+        overflow-y: visible;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure tables don't overflow */
+    .table-container {
+        overflow-x: auto;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improved popup positioning for mobile */
 .popup-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -954,6 +1221,9 @@ canvas#studentDistributionChart {
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s;
+    box-sizing: border-box;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 .popup-container.active {
@@ -966,10 +1236,34 @@ canvas#studentDistributionChart {
     border-radius: 0.5rem;
     padding: 1.25rem;
     width: 400px;
-    max-width: 90%;
+    max-width: 100%;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     text-align: center;
     animation: fadeInUp 0.3s ease-out;
+    margin: auto;
+    position: relative;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+/* Mobile-specific popup adjustments */
+@media (max-width: 768px) {
+    .popup {
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+        max-height: calc(100vh - 4rem);
+    }
+    
+    .popup-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .popup-btn {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
 }
 
 .popup-icon {
@@ -1096,4 +1390,4 @@ body, html {
     .main-content {
         padding: 0.5rem;
     }
-} 
+}

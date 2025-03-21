@@ -17,10 +17,8 @@
             <table id="subjectTable">
                 <thead>
                     <tr>
-                        <th>Mã môn học</th>
                         <th>Tên môn học</th>
-                        <th>Mô tả</th>
-                        <th>Số tín chỉ</th>
+    
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -34,33 +32,19 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="subjectModalTitle">Thông tin môn học</h3>
-                <span class="close" onclick="adminDashboard.closeModal('subjectModal')">&times;</span>
+                <span class="close modal-close">&times;</span>
             </div>
             <form id="subjectForm">
-                <input type="hidden" id="subjectId" name="subjectId">
-          
-                <div class="form-group">
-                    <label for="subjectCode">Mã môn học</label>
-                    <input type="text" id="subjectCode" name="code" required>
-                </div>
-                
+                <input type="hidden" id="subjectId" name="subjectId">      
                 <div class="form-group">
                     <label for="subjectName">Tên môn học</label>
-                    <input type="text" id="subjectName" name="name" required>
+                    <input type="text" id="subjectName" name="subjectName" required>
                 </div>
                 
-                <div class="form-group">
-                    <label for="subjectDescription">Mô tả</label>
-                    <input type="text" id="subjectDescription" name="description">
-                </div>
-                
-                <div class="form-group">
-                    <label for="subjectCredits">Số tín chỉ</label>
-                    <input type="number" id="subjectCredits" name="credits" min="1" max="10" required>
-                </div>
+          
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="adminDashboard.closeModal('subjectModal')">Hủy</button>
+                    <button type="button" class="btn-secondary modal-close">Hủy</button>
                     <button type="submit" class="btn-primary">Lưu</button>
                 </div>
             </form>

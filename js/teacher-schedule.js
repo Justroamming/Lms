@@ -172,26 +172,16 @@ class TeacherSchedule {
       // Load schedule của giáo viên từ API.
       async loadSchedule() {
         try {
-          let scheduleData;
-          
-          try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            scheduleData = await response.json();
-          } catch (error) {
-            console.warn('Không thể kết nối đến API, sử dụng dữ liệu mẫu:', error);
-            scheduleData = this.getMockSchedule();
+          const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
           }
-          
-          this.schedule = scheduleData;
+          this.schedule = await response.json();
           
           // Thiết lập phạm vi lịch (12 tuần) dựa trên lessonDate sớm nhất.
           if (this.schedule && this.schedule.length > 0) {
             // Tìm ngày lessonDate sớm nhất.
-            const dateField = this.schedule[0].lessonDate ? 'lessonDate' : 'day';
-            const earliest = new Date(Math.min(...this.schedule.map(item => new Date(item[dateField]))));
+            const earliest = new Date(Math.min(...this.schedule.map(item => new Date(item.lessonDate))));
             this.scheduleStart = this.getMonday(earliest);
             this.scheduleEnd = new Date(this.scheduleStart);
             // Thêm 12 tuần (84 ngày) vào scheduleStart.
@@ -275,39 +265,17 @@ class TeacherSchedule {
         let hasEventsThisWeek = false;
         
         this.schedule.forEach((item, index) => {
-          // Kiểm tra xem đây là dữ liệu API hay dữ liệu mẫu
-          const isMockData = item.day !== undefined;
-          
-          let eventDate;
-          
-          if (isMockData) {
-            // Dữ liệu mẫu đã có ngày cụ thể
-            eventDate = new Date(item.day);
-            
-            // Kiểm tra xem ngày này có thuộc tuần hiện tại không
-            const currentWeekEnd = new Date(this.currentWeekStart);
-            currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
-            
-            if (eventDate < this.currentWeekStart || eventDate > currentWeekEnd) {
-              return; // Bỏ qua sự kiện không thuộc tuần hiện tại
-            }
-          } else {
-            // Dữ liệu API: Tính ngày xuất hiện từ currentWeekStart + (dayMapping - 1)
-            eventDate = new Date(this.currentWeekStart);
-            eventDate.setDate(eventDate.getDate() + (this.dayMapping[item.dayOfWeek] - 1));
-            
-            // Chỉ hiển thị event nếu ngày xuất hiện nằm trong khoảng 12 tuần.
-            if (eventDate < this.scheduleStart || eventDate >= this.scheduleEnd) return;
-          }
+          // Tính ngày xuất hiện: từ currentWeekStart + (dayMapping - 1).
+          const eventOccurrence = new Date(this.currentWeekStart);
+          eventOccurrence.setDate(eventOccurrence.getDate() + (this.dayMapping[item.dayOfWeek] - 1));
+          // Chỉ hiển thị event nếu ngày xuất hiện nằm trong khoảng 12 tuần.
+          if (eventOccurrence < this.scheduleStart || eventOccurrence >= this.scheduleEnd) return;
           
           hasEventsThisWeek = true;
     
-          // Phân tích thời gian bắt đầu và kết thúc
-          const startTimeStr = isMockData ? item.startTime : item.startTime;
-          const endTimeStr = isMockData ? item.endTime : item.endTime;
-          
-          const start = this.parseTime(startTimeStr);
-          const end = this.parseTime(endTimeStr);
+          // Phân tích thời gian bắt đầu và kết thúc (format "HH:MM:SS").
+          const start = this.parseTime(item.startTime);
+          const end = this.parseTime(item.endTime);
           const startTotalMinutes = start.hours * 60 + start.minutes;
           const endTotalMinutes = end.hours * 60 + end.minutes;
           const calendarStartMinutes = this.startHour * 60;
@@ -319,19 +287,7 @@ class TeacherSchedule {
           // Tính toán vị trí và kích thước
           const top = (offsetMinutes / 60) * hourHeight;
           const height = (durationMinutes / 60) * hourHeight;
-          
-          // Tính vị trí theo ngày trong tuần
-          let left;
-          if (isMockData) {
-            // Với dữ liệu mẫu, tính vị trí dựa trên ngày trong tuần (0 = Chủ nhật, 1 = Thứ 2, ...)
-            const dayOfWeek = eventDate.getDay();
-            // Chuyển đổi từ 0-6 (Chủ nhật-Thứ 7) sang 0-6 (Thứ 2-Chủ nhật)
-            const adjustedDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            left = adjustedDayOfWeek * dayColumnWidth;
-          } else {
-            // Với dữ liệu API, sử dụng dayMapping
-            left = (this.dayMapping[item.dayOfWeek] - 1) * dayColumnWidth;
-          }
+          const left = (this.dayMapping[item.dayOfWeek] - 1) * dayColumnWidth;
     
           // Tạo phần tử event.
           const eventDiv = document.createElement('div');
@@ -350,60 +306,42 @@ class TeacherSchedule {
             'Địa lý': 'pink'
           };
           
-          // Xác định tiêu đề và màu sắc dựa trên loại dữ liệu
-          let eventTitle, eventColor, eventClass, eventRoom;
-          
-          if (isMockData) {
-            eventTitle = item.title;
-            eventColor = item.color || 'blue';
-            eventClass = item.class;
-            eventRoom = item.room;
-          } else {
-            eventTitle = item.subject;
-            eventColor = subjectColors[item.subject] || 'default';
-            eventClass = item.className;
-            eventRoom = item.room;
-          }
-          
-          eventDiv.classList.add(`event-${eventColor}`);
-          
-          // Định dạng thời gian hiển thị
-          const formattedStartTime = isMockData ? startTimeStr : startTimeStr.slice(0, 5);
-          const formattedEndTime = isMockData ? endTimeStr : endTimeStr.slice(0, 5);
+          const colorClass = subjectColors[item.subjectName] || 'default';
+          eventDiv.classList.add(`event-${colorClass}`);
           
           eventDiv.innerHTML = `
               <div class="event-header">
-                <strong>${eventTitle}</strong>
-                <span class="event-time">${formattedStartTime} - ${formattedEndTime}</span>
+                <strong>${item.subjectName}</strong>
+                <span class="event-time">${item.startTime.slice(0,5)} - ${item.endTime.slice(0,5)}</span>
               </div>
               <div class="event-body">
                 <div class="event-detail">
                   <i class="fas fa-users"></i>
-                  <span>${eventClass}</span>
+                  <small>${item.cohortName}</small>
                 </div>
                 <div class="event-detail">
                   <i class="fas fa-map-marker-alt"></i>
-                  <span>${eventRoom}</span>
+                  <small>${item.location}</small>
                 </div>
               </div>
           `;
           
           // Thiết lập vị trí và kích thước
-          eventDiv.style.top = `${top}px`;
-          eventDiv.style.left = `${left}px`;
-          eventDiv.style.height = `${height}px`;
-          eventDiv.style.width = `${dayColumnWidth - 2}px`;
+          eventDiv.style.top = top + "px";
+          eventDiv.style.height = height + "px";
+          eventDiv.style.left = left + "px";
+          eventDiv.style.width = (dayColumnWidth - 4) + "px";
           
-          // Thêm tooltip
+          // Thêm tooltip khi hover
           eventDiv.setAttribute('data-bs-toggle', 'tooltip');
           eventDiv.setAttribute('data-bs-placement', 'top');
-          eventDiv.setAttribute('title', `${eventTitle} - ${eventClass} - ${eventRoom}`);
+          eventDiv.setAttribute('title', `${item.subjectName} - ${item.cohortName} - ${item.location}`);
           
           // Thêm sự kiện click để hiển thị chi tiết
           eventDiv.addEventListener('click', () => {
             this.showEventDetails(item);
           });
-          
+    
           eventOverlay.appendChild(eventDiv);
         });
         
@@ -429,34 +367,6 @@ class TeacherSchedule {
       
       // Hiển thị chi tiết sự kiện
       showEventDetails(event) {
-        // Kiểm tra xem đây là dữ liệu API hay dữ liệu mẫu
-        const isMockData = event.day !== undefined;
-        
-        // Xác định các thông tin cần hiển thị
-        let eventTitle, eventClass, eventRoom, eventDay, eventStartTime, eventEndTime;
-        
-        if (isMockData) {
-          eventTitle = event.title;
-          eventClass = event.class;
-          eventRoom = event.room;
-          
-          // Lấy tên thứ từ ngày
-          const eventDate = new Date(event.day);
-          const dayOfWeek = eventDate.getDay();
-          const weekdays = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-          eventDay = weekdays[dayOfWeek];
-          
-          eventStartTime = event.startTime;
-          eventEndTime = event.endTime;
-        } else {
-          eventTitle = event.subjectName;
-          eventClass = event.cohortName;
-          eventRoom = event.location;
-          eventDay = this.getVietnameseDayName(event.dayOfWeek);
-          eventStartTime = event.startTime.slice(0, 5);
-          eventEndTime = event.endTime.slice(0, 5);
-        }
-        
         // Tạo modal hiển thị chi tiết
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal fade';
@@ -478,38 +388,41 @@ class TeacherSchedule {
                     <i class="fas fa-book"></i>
                     <div>
                       <label>Môn học</label>
-                      <p>${eventTitle}</p>
+                      <p>${event.subjectName}</p>
                     </div>
                   </div>
                   <div class="event-detail-item">
                     <i class="fas fa-users"></i>
                     <div>
                       <label>Lớp</label>
-                      <p>${eventClass}</p>
+                      <p>${event.cohortName}</p>
                     </div>
                   </div>
                   <div class="event-detail-item">
                     <i class="fas fa-calendar-day"></i>
                     <div>
                       <label>Thứ</label>
-                      <p>${eventDay}</p>
+                      <p>${this.getVietnameseDayName(event.dayOfWeek)}</p>
                     </div>
                   </div>
                   <div class="event-detail-item">
                     <i class="fas fa-clock"></i>
                     <div>
                       <label>Thời gian</label>
-                      <p>${eventStartTime} - ${eventEndTime}</p>
+                      <p>${event.startTime.slice(0,5)} - ${event.endTime.slice(0,5)}</p>
                     </div>
                   </div>
                   <div class="event-detail-item">
                     <i class="fas fa-map-marker-alt"></i>
                     <div>
                       <label>Địa điểm</label>
-                      <p>${eventRoom}</p>
+                      <p>${event.location}</p>
                     </div>
                   </div>
                 </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
               </div>
             </div>
           </div>

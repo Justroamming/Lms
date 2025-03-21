@@ -35,8 +35,18 @@ class StudentDashboard {
 
     async loadStudentInfo() {
         const welcomeName = document.getElementById('studentNameWelcome');
-        if (welcomeName && this.student) {
-            welcomeName.textContent = `${this.student.lastName} ${this.student.firstName}`;
+        const headerName = document.getElementById('studentName');
+        
+        if (this.student) {
+            const fullName = `${this.student.lastName} ${this.student.firstName}`;
+            
+            if (welcomeName) {
+                welcomeName.textContent = fullName;
+            }
+            
+            if (headerName) {
+                headerName.textContent = fullName;
+            }
         }
     }
 
