@@ -29,23 +29,6 @@
         }
         
         /* Thêm một số điểm sáng tĩnh */
-        .light-dots {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .light-dot {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-        }
         
         /* Đơn giản hóa login box nhưng vẫn giữ một số hiệu ứng nhẹ */
         .login-box {
@@ -116,19 +99,6 @@
     </style>
 </head>
 <body>
-    <!-- Thêm điểm sáng tĩnh -->
-    <div class="light-dots">
-        <div class="light-dot" style="top: 10%; left: 20%"></div>
-        <div class="light-dot" style="top: 15%; left: 80%"></div>
-        <div class="light-dot" style="top: 25%; left: 40%"></div>
-        <div class="light-dot" style="top: 35%; left: 70%"></div>
-        <div class="light-dot" style="top: 45%; left: 15%"></div>
-        <div class="light-dot" style="top: 55%; left: 60%"></div>
-        <div class="light-dot" style="top: 65%; left: 30%"></div>
-        <div class="light-dot" style="top: 75%; left: 85%"></div>
-        <div class="light-dot" style="top: 85%; left: 45%"></div>
-        <div class="light-dot" style="top: 90%; left: 10%"></div>
-    </div>
     
     <!-- Notifications outside of form container -->
     <div class="notification error-message" id="errorMessage">
