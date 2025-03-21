@@ -10,7 +10,7 @@ class StudentDashboard {
             const studentId = currentUser ? JSON.parse(currentUser).studentId : null;
             if (!studentId) throw new Error('Không tìm thấy ID học sinh');
 
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetStudentById?id=${studentId}`);
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentById?id=${studentId}`);
             if (!response.ok) throw new Error('Lỗi khi lấy dữ liệu học sinh');
 
             const result = await response.json();
@@ -63,7 +63,7 @@ class StudentDashboard {
     
         try {
             // Fetch overall stats
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`);
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`);
             if (!response.ok) throw new Error('Lỗi khi tải thống kê');
     
             const statsArray = await response.json();
@@ -79,7 +79,7 @@ class StudentDashboard {
                 stats.overallAverageScore ? parseFloat(stats.overallAverageScore).toFixed(2) : '0.00';
     
             // Fetch future test dates
-            const testResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
+            const testResponse = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
             if (!testResponse.ok) throw new Error('Lỗi khi tải ngày kiểm tra');
     
             const tests = await testResponse.json();
@@ -128,7 +128,7 @@ class StudentDashboard {
         }
 
         try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetAllGradesOfAStudent?id=${this.student.studentId}`);
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${this.student.studentId}`);
             if (!response.ok) throw new Error('Lỗi khi tải điểm số');
 
             const scores = await response.json();
@@ -160,7 +160,7 @@ class StudentDashboard {
 
     async loadUpcomingExams() {
         try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch upcoming exams');
             }

@@ -1,15 +1,16 @@
 document.querySelector('.cta-button').addEventListener('click', () => {
+    alert('Welcome to Student Score Management!');
     window.location.href = 'login.html';
 });
 
 // Function to fetch system stats
 async function getSystemStats() {
     try {
-        const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Index/GetNumberofStudents');
+        const studentsResponse = await fetch('https://localhost:7231/Index/GetNumberofStudents');
         const studentsData = await studentsResponse.json();
         const students = studentsData.data || [];
         
-        const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/Index/GetNumberofTeachers');
+        const teachersResponse = await fetch('https://localhost:7231/Index/GetNumberofTeachers');
         const teachersData = await teachersResponse.json();
         const teachers = teachersData.data || [];
 

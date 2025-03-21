@@ -19,25 +19,7 @@ class AdminDashboard {
         // Khởi tạo xử lý popup
         this.setupPopupHandlers();
 
-        this.pages = {
-            dashboard: 'Tổng quan',
-            students: 'Quản lý học sinh',
-            teachers: 'Quản lý giáo viên',
-            cohorts: 'Quản lý lớp học',
-            subjects: 'Quản lý môn học',
-            assignments: 'Phân công giảng dạy'
-        };
-        this.studentsData = [];
-        this.teachersData = [];
-        this.cohortsData = [];
-        this.subjectsData = [];
-        this.assignmentsData = [];
-        
-        // Khởi tạo dữ liệu
-        this.loadData();
-        
-        // Xử lý hiển thị trang
-        this.initPageHandlers();
+        this.setupModalCloseHandlers();
     }
 
     initializeNavigation() {
@@ -124,13 +106,13 @@ class AdminDashboard {
     async initializeStudentDistributionChart() {
         try {
             // Lấy dữ liệu lớp học và số lượng học sinh
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
             // Lấy số lượng học sinh cho mỗi lớp
             const studentCounts = await Promise.all(cohorts.map(async (cohort) => {
-                const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
                 const data = await response.json();
                 return data[0]?.numOfStudents || 0;
             }));
@@ -210,7 +192,7 @@ class AdminDashboard {
     async updateQuickStats() {
         try {
             // Lấy tất cả học sinh
-            const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             const studentsData = await studentsResponse.json();
             const students = studentsData.data || [];
 
@@ -222,13 +204,13 @@ class AdminDashboard {
             document.getElementById('genderRatio').textContent = `${malePercent}% / ${femalePercent}%`;
 
             // Lấy thông tin về lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
             // Lấy số lượng học sinh cho mỗi lớp
             const cohortStats = await Promise.all(cohorts.map(async (cohort) => {
-                const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
+                const response = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${cohort.cohortId}`);
                 const data = await response.json();
                 return {
                     name: cohort.cohortName,
@@ -256,7 +238,7 @@ class AdminDashboard {
     }
 
     async loadCohortsForSelect() {
-        const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+        const response = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
         const data = await response.json();
         const cohorts = data.data || [];
     
@@ -268,7 +250,7 @@ class AdminDashboard {
     
     async loadStudents() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -280,7 +262,7 @@ class AdminDashboard {
     
             console.log("Parsed students:", students); 
     
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data; 
             console.log("API Cohorts Response:", cohorts); 
@@ -331,6 +313,37 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveStudent();
         });
+        
+        // Add search functionality
+        document.getElementById('searchStudent')?.addEventListener('input', (e) => {
+            this.searchStudents(e.target.value);
+        });
+    }
+
+    searchStudents(query) {
+        try {
+            const tbody = document.querySelector('#studentTable tbody');
+            if (!tbody) {
+                console.error("Could not find student table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in student table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchStudents:", error);
+        }
     }
 
     async openStudentModal(studentId = null) {
@@ -361,7 +374,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin học sinh
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentById?id=${studentId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetStudentById?id=${studentId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -401,16 +414,18 @@ class AdminDashboard {
                             if (addressField) addressField.value = studentData.address || '';
                             
                             // Xử lý ngày sinh
-                            if (dobField && studentData.dob) {
-                                let dobValue = studentData.dob;
+                            if (dobField) {
+                                let dobValue = studentData.dateOfBirth || studentData.dob || '';
                                 // Cắt thời gian nếu cần thiết
-                                if (dobValue.includes('T')) {
+                                if (dobValue && dobValue.includes('T')) {
                                     dobValue = dobValue.split('T')[0];
                                 }
                                 dobField.value = dobValue;
                             }
                             
-                            if (phoneField) phoneField.value = studentData.phone || '';
+                            // Modify these lines to match the API response field names
+                            if (phoneField) phoneField.value = studentData.phoneNumber || studentData.phone || '';
+                            
                             if (passwordField) passwordField.value = studentData.password || '';
                             
                             // Đặt giá trị cho lớp học
@@ -546,7 +561,7 @@ class AdminDashboard {
 
     async loadTeachers() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -597,6 +612,37 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveTeacher();
         });
+        
+        // Add search functionality
+        document.getElementById('searchTeacher')?.addEventListener('input', (e) => {
+            this.searchTeachers(e.target.value);
+        });
+    }
+
+    searchTeachers(query) {
+        try {
+            const tbody = document.querySelector('#teacherTable tbody');
+            if (!tbody) {
+                console.error("Could not find teacher table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in teacher table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchTeachers:", error);
+        }
     }
 
     async openTeacherModal(teacherId = null) {
@@ -624,7 +670,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin giáo viên
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetTeacherById?id=${teacherId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetTeacherById?id=${teacherId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -663,16 +709,18 @@ class AdminDashboard {
                             if (addressField) addressField.value = teacherData.address || '';
                             
                             // Xử lý ngày sinh
-                            if (dobField && teacherData.dob) {
-                                let dobValue = teacherData.dob;
+                            if (dobField) {
+                                let dobValue = teacherData.dateOfBirth || teacherData.dob || '';
                                 // Cắt thời gian nếu cần thiết
-                                if (dobValue.includes('T')) {
+                                if (dobValue && dobValue.includes('T')) {
                                     dobValue = dobValue.split('T')[0];
                                 }
                                 dobField.value = dobValue;
                             }
                             
-                            if (phoneField) phoneField.value = teacherData.phone || '';
+                            // Modify these lines to match the API response field names
+                            if (phoneField) phoneField.value = teacherData.phoneNumber || teacherData.phone || '';
+                            
                             if (passwordField) passwordField.value = teacherData.password || '';
                             
                             // Log các trường đã điền
@@ -794,9 +842,9 @@ class AdminDashboard {
     }
 
 
-    async  loadCohorts() {
+    async loadCohorts() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const data = await response.json();
             console.log("API Cohorts Response:", data);
     
@@ -810,7 +858,7 @@ class AdminDashboard {
             // Get student counts for each cohort
             const studentCounts = await Promise.all(cohorts.map(async (co) => {
                 try {
-                    const res = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetNumOfStudentsInACohort?id=${co.cohortId}`);
+                    const res = await fetch(`https://localhost:7231/RealAdmins/GetNumOfStudentsInACohort?id=${co.cohortId}`);
                     const countData = await res.json();
                     
                     if (Array.isArray(countData) && countData.length > 0) {
@@ -854,7 +902,7 @@ class AdminDashboard {
 
     async printStudentInfo(cohortId) {
         try {
-            const res = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetStudentsInCohort?id=${cohortId}`);
+            const res = await fetch(`https://localhost:7231/RealAdmins/GetStudentsInCohort?id=${cohortId}`);
             const students = await res.json();
     
             if (!Array.isArray(students) || students.length === 0) {
@@ -936,7 +984,39 @@ class AdminDashboard {
             e.preventDefault();
             await this.saveCohort();
         });
+        
+        // Add search functionality
+        document.getElementById('searchCohort')?.addEventListener('input', (e) => {
+            this.searchCohorts(e.target.value);
+        });
     }
+
+    searchCohorts(query) {
+        try {
+            const tbody = document.querySelector('#cohortTable tbody');
+            if (!tbody) {
+                console.error("Could not find cohort table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in cohort table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                // Show/hide row based on search match
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchCohorts:", error);
+        }
+    }
+
 
     async openCohortModal(cohortId = null) {
         // Đặt tiêu đề modal tùy theo thêm mới hay chỉnh sửa
@@ -963,7 +1043,7 @@ class AdminDashboard {
                     this.showNotification('info', 'Đang tải dữ liệu', 'Vui lòng đợi trong giây lát...', null);
                     
                     // Gọi API để lấy thông tin lớp học
-                    const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetCohortById?id=${cohortId}`);
+                    const response = await fetch(`https://localhost:7231/RealAdmins/GetCohortById?id=${cohortId}`);
                     
                     // Ẩn thông báo đang tải
                     this.hideNotification();
@@ -989,8 +1069,8 @@ class AdminDashboard {
                             const descriptionField = form.querySelector('[name="description"]');
                             
                             // Điền dữ liệu vào từng trường nếu trường tồn tại và có dữ liệu
-                            if (nameField) nameField.value = cohortData.name || cohortData.CName || '';
-                            if (descriptionField) descriptionField.value = cohortData.description || cohortData.Description || '';
+                            if (nameField) nameField.value = cohortData.cohortName;
+                            if (descriptionField) descriptionField.value = cohortData.description;
                             
                             // Log các trường đã điền
                             console.log('Form filled with the following values:', {
@@ -1068,14 +1148,14 @@ class AdminDashboard {
     async saveCohortRequest(cohortData) {
         const params = new URLSearchParams({
             id: cohortData.cohortId || "",
-            name: cohortData.cohortName,
+            Cname: cohortData.cohortName,
             description: cohortData.description
         });
 
         const isUpdating = Boolean(cohortData.cohortId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateCohort?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertCohort?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateCohort?${params}`
+            : `https://localhost:7231/RealAdmins/InsertCohort?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1119,7 +1199,7 @@ class AdminDashboard {
     }
 
     async deleteCohortRequest(cohortId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteCohort?id=${cohortId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteCohort?id=${cohortId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -1135,9 +1215,239 @@ class AdminDashboard {
     }
 
     
+    async initializeSubjectManagement() {
+        await this.loadSubjects();
+        this.setupSubjectEventListeners();
+    }
 
+    async loadSubjects() {
+        try {
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
+            const data = await response.json();
+            console.log("API Subjects Response:", data);
+    
+            const subjects = data.data; 
+    
+            if (!Array.isArray(subjects)) {
+                console.error("Lỗi: API không trả về một mảng môn học!");
+                return;
+            }
+            
+            this.subjectsData = subjects;
+            
+            // Kiểm tra xem có phần tử tbody không
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Không tìm thấy phần tử #subjectTable tbody trong DOM");
+                return;
+            }
+            
+            tbody.innerHTML = subjects.map(subject => `
+                <tr>
+                    <td>${subject.subjectName}</td>
+                    <td>
+                        <button onclick="adminDashboard.openSubjectModal('${subject.subjectId}')" class="btn-edit" data-id="${subject.subjectId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="adminDashboard.deleteSubject('${subject.subjectId}')" class="btn-delete" data-id="${subject.subjectId}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách môn học:", error);
+            this.showNotification(
+                'error',
+                'Lỗi tải dữ liệu',
+                'Đã xảy ra lỗi khi tải danh sách môn học. Vui lòng thử lại sau.'
+            );
+        }
+    }
 
+    setupSubjectEventListeners() {
+        document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
+            this.openSubjectModal();
+        });
 
+        document.getElementById('subjectForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveSubject();
+        });
+
+    
+        document.getElementById('searchSubject')?.addEventListener('input', (e) => {
+            this.searchSubjects(e.target.value);
+        });
+    }
+
+    openSubjectModal(subjectId = null) {
+        const modal = document.getElementById('subjectModal');
+        const form = document.getElementById('subjectForm');
+        const modalTitle = document.getElementById('subjectModalTitle');
+        
+
+        modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
+        
+        form.reset();
+        
+        // Thiết lập dữ liệu nếu là chỉnh sửa
+        if (subjectId) {
+            const subject = this.subjectsData.find(s => s.subjectId == subjectId);
+            if (subject) {
+                document.getElementById('subjectId').value = subject.subjectId;
+               
+                document.getElementById('subjectName').value = subject.subjectName || '';
+               
+            }
+        } else {
+            document.getElementById('subjectId').value = '';
+        }
+        
+        // Mở modal
+        this.openModal('subjectModal');
+    }
+
+    async saveSubject() {
+        const form = document.getElementById('subjectForm');
+        const formData = new FormData(form);
+        const subjectData = {};
+        
+        formData.forEach((value, key) => {
+            subjectData[key] = value;
+        });
+        
+        try {
+            console.log('Dữ liệu môn học:', subjectData);
+            // Xác thực dữ liệu
+            if (!subjectData.subjectName) {
+                throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+            }
+            
+            // Gọi hàm API để lưu dữ liệu
+            await this.saveSubjectRequest(subjectData);
+            
+            // Đóng modal
+            this.closeModal('subjectModal');
+            
+            // Cập nhật danh sách
+            await this.loadSubjects();
+            
+            // Hiển thị thông báo thành công
+            const isUpdate = subjectData.subjectId && subjectData.subjectId.trim() !== '';
+            this.showNotification(
+                'success',
+                isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                isUpdate ? 'Thông tin môn học đã được cập nhật.' : 'Môn học mới đã được thêm vào hệ thống.'
+            );
+        } catch (error) {
+            console.error('Lỗi khi lưu môn học:', error);
+            this.showNotification(
+                'error',
+                'Lỗi lưu dữ liệu',
+                error.message || 'Có lỗi xảy ra khi lưu môn học!'
+            );
+        }
+    }
+    
+    async saveSubjectRequest(subjectData) {
+        const params = new URLSearchParams({
+            id: subjectData.subjectId || "",
+           
+            sName: subjectData.subjectName,
+       
+        });
+
+        const isUpdating = Boolean(subjectData.subjectId);
+        const url = isUpdating
+            ? `https://localhost:7231/RealAdmins/UpdateASubject?${params}`
+            : `https://localhost:7231/RealAdmins/InsertASubject?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Lỗi ${isUpdating ? "cập nhật" : "tạo mới"} môn học: ${response.status}`);
+        
+        return response.json();
+    }
+
+    deleteSubject(subjectId) {
+        this.showConfirmation(
+            'Xác nhận xóa môn học',
+            'Bạn có chắc chắn muốn xóa môn học này không? Dữ liệu không thể khôi phục sau khi xóa.',
+            async () => {
+                try {
+                    await this.deleteSubjectRequest(subjectId);
+                    await this.loadSubjects();
+                    this.showNotification(
+                        'success',
+                        'Xóa môn học thành công',
+                        'Môn học đã được xóa khỏi hệ thống.'
+                    );
+                } catch (error) {
+                    console.error('Error deleting subject:', error);
+                    this.showNotification(
+                        'error',
+                        'Lỗi xóa môn học',
+                        'Đã xảy ra lỗi khi xóa môn học. Vui lòng thử lại sau.'
+                    );
+                }
+            }
+        );
+    }
+    
+    async deleteSubjectRequest(subjectId) {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteASubject?id=${subjectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa môn học: ${response.status}`);
+        }
+        
+        return true;
+    }
+
+    searchSubjects(query) {
+        try {
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Could not find subject table body");
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in subject table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                // Get the text content of the subject name cell (first column)
+                const subjectName = row.cells[0]?.textContent.toLowerCase() || '';
+                
+                // Show/hide row based on search match
+                if (subjectName.includes(searchText)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        } catch (error) {
+            console.error("Error in searchSubjects:", error);
+        }
+    }
+    
     async initializeAssignmentManagement() {
         await this.loadAssignments();
         this.setupAssignmentEventListeners();
@@ -1146,7 +1456,7 @@ class AdminDashboard {
 
     async loadAssignments() {
         try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacherSchedule');
+            const response = await fetch('https://localhost:7231/RealAdmins/GetAllTeacherSchedule');
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
@@ -1154,17 +1464,17 @@ class AdminDashboard {
             const assignments = data || [];
 
             // Lấy thông tin giáo viên
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
 
             // Lấy thông tin môn học
-            const subjectsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
             const subjectsData = await subjectsResponse.json();
             const subjects = subjectsData.data || [];
 
             // Lấy thông tin lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
 
@@ -1217,7 +1527,7 @@ class AdminDashboard {
     async loadAssignmentFormData() {
         try {
             // Load danh sách giáo viên
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
             
@@ -1227,7 +1537,7 @@ class AdminDashboard {
             ).join('');
 
             // Load danh sách môn học
-            const subjectsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const subjectsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllSubjects');
             const subjectsData = await subjectsResponse.json();
             const subjects = subjectsData.data || [];
             
@@ -1237,7 +1547,7 @@ class AdminDashboard {
             ).join('');
 
             // Load danh sách lớp học
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
             
@@ -1270,17 +1580,63 @@ class AdminDashboard {
         const modal = document.getElementById('assignmentModal');
         const form = document.getElementById('assignmentForm');
         console.log("Lesson Class ID:", lessonClassId);
+        
+        // Get all date input fields from the form
+        const dateInputs = form.querySelectorAll('input[type="date"]');
+        console.log("Date input fields in form:", Array.from(dateInputs).map(el => el.name));
+        
         if (lessonClassId) {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/GetLessonSchedulebyID?id=${lessonClassId}`);
+            const response = await fetch(`https://localhost:7231/RealAdmins/GetLessonSchedulebyID?id=${lessonClassId}`);
             const assignmentArray = await response.json();
             const assignment = assignmentArray[0]; // Access the first item in the array
-            console.log("Lesson Class ID:", assignment.lessonClassId);
-        
+            console.log("Raw assignment data:", assignment);
+            
+            // Log all date fields in response
+            Object.keys(assignment).forEach(key => {
+                if (typeof assignment[key] === 'string' && assignment[key].includes('T')) {
+                    console.log(`Field "${key}" contains date value: ${assignment[key]}`);
+                }
+            });
+            
+            // First, try to map fields directly
             Object.keys(assignment).forEach(key => {
                 const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = assignment[key];
-                console.log("Key:", key, "Value:", assignment[key]);
+                if (input) {
+                    // Special handling for date fields
+                    if (key === "lessonDate" && input.type === "date") {
+                        if (assignment[key] && assignment[key].includes('T')) {
+                            input.value = assignment[key].split('T')[0];
+                        } else {
+                            input.value = assignment[key] || '';
+                        }
+                        console.log(`Set date field ${key} = ${input.value}`);
+                    } else {
+                        input.value = assignment[key] || '';
+                    }
+                }
             });
+            
+            // Special case - if startDay field exists but lessonDate isn't mapped
+            const startDayInput = form.querySelector('[name="startDay"]');
+            if (startDayInput && assignment.lessonDate) {
+                if (assignment.lessonDate.includes('T')) {
+                    startDayInput.value = assignment.lessonDate.split('T')[0];
+                } else {
+                    startDayInput.value = assignment.lessonDate;
+                }
+                console.log(`Set startDay = ${startDayInput.value} from lessonDate`);
+            }
+            
+            // Or the other way around
+            const lessonDateInput = form.querySelector('[name="lessonDate"]');
+            if (lessonDateInput && assignment.startDay) {
+                if (assignment.startDay.includes('T')) {
+                    lessonDateInput.value = assignment.startDay.split('T')[0];
+                } else {
+                    lessonDateInput.value = assignment.startDay;
+                }
+                console.log(`Set lessonDate = ${lessonDateInput.value} from startDay`);
+            }
         } else {
             form.reset();
         }
@@ -1307,8 +1663,8 @@ class AdminDashboard {
         });
     
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateAssignedTeacher?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/AssignTeacher?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateAssignedTeacher?${params}`
+            : `https://localhost:7231/RealAdmins/AssignTeacher?${params}`;
 
     
         const method = isUpdating ? "PUT" : "POST";
@@ -1333,7 +1689,7 @@ class AdminDashboard {
         if (!confirm('Bạn có chắc chắn muốn xóa phân công này?')) return;
 
         try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteAssignedTeacher?lessonClassID=${lessonClassId}`, {
+            const response = await fetch(`https://localhost:7231/RealAdmins/DeleteAssignedTeacher?lessonClassID=${lessonClassId}`, {
                 method: 'DELETE'
             });
 
@@ -1349,11 +1705,22 @@ class AdminDashboard {
     }
 
     searchAssignments(query) {
-        const rows = document.querySelectorAll('#assignmentTable tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
-        });
+        try {
+            const rows = document.querySelectorAll('#assignmentTable tbody tr');
+            if (rows.length === 0) {
+                console.warn("No rows found in assignment table");
+                return;
+            }
+            
+            const searchText = query.toLowerCase();
+            
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(searchText) ? '' : 'none';
+            });
+        } catch (error) {
+            console.error("Error in searchAssignments:", error);
+        }
     }
 
     async initializeAccountManagement() {
@@ -1362,13 +1729,13 @@ class AdminDashboard {
     }
 
     async loadAccounts() {
-        const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/Teacher/GetAllTeacher');
+        const teachersResponse = await fetch('https://localhost:7231/Teacher/GetAllTeacher');
         const teachersData = await teachersResponse.json();
         const teachers = teachersData.data || [];
-        const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Student/GetAllStudents');
+        const studentsResponse = await fetch('https://localhost:7231/Student/GetAllStudents');
         const studentsData = await studentsResponse.json();
         const students = studentsData.data || [];
-        const adminsResponse = await fetch('https://scoreapi-1zqy.onrender.com/Admin/GetAllAdmins');
+        const adminsResponse = await fetch('https://localhost:7231/Admin/GetAllAdmins');
         const adminsData = await adminsResponse.json();
         const admins = adminsData.data || [];
         
@@ -1400,15 +1767,15 @@ class AdminDashboard {
     
     async  getSystemStats() {   
         try {
-            const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
+            const studentsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllStudents');
             const studentsData = await studentsResponse.json();
             const students = studentsData.data || [];
             
-            const teachersResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllTeacher');
+            const teachersResponse = await fetch('https://localhost:7231/RealAdmins/GetAllTeacher');
             const teachersData = await teachersResponse.json();
             const teachers = teachersData.data || [];
 
-            const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
+            const cohortsResponse = await fetch('https://localhost:7231/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
     
@@ -1437,6 +1804,26 @@ class AdminDashboard {
         // Trigger reflow
         modal.offsetHeight;
         modal.classList.add('show');
+        
+        // Add event listeners to close buttons
+        const closeButtons = modal.querySelectorAll('.modal-close');
+        closeButtons.forEach(button => {
+            // Remove any existing event listeners to prevent duplicates
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Add new event listener
+            newButton.addEventListener('click', () => {
+                this.closeModal(modalId);
+            });
+        });
+        
+        // Setup click outside modal to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal(modalId);
+            }
+        });
     }
 
     // Thêm event listeners cho đóng modal khi click ra ngoài
@@ -1537,7 +1924,18 @@ class AdminDashboard {
             });
         }
     }
-
+    setupModalCloseHandlers() {
+        // Add global handler for modal close buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-close')) {
+                // Find the parent modal
+                let modal = e.target.closest('.modal');
+                if (modal && modal.id) {
+                    this.closeModal(modal.id);
+                }
+            }
+        });
+    }
     /**
      * Hiển thị popup xác nhận với callback
      * @param {string} title - Tiêu đề popup
@@ -1666,8 +2064,8 @@ class AdminDashboard {
 
         const isUpdating = Boolean(studentData.studentId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateStudent?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertStudent?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateStudent?${params}`
+            : `https://localhost:7231/RealAdmins/InsertStudent?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1683,7 +2081,7 @@ class AdminDashboard {
 
     // Thêm phương thức deleteStudentRequest 
     async deleteStudentRequest(studentId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteStudent?id=${studentId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteStudent?id=${studentId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -1714,8 +2112,8 @@ class AdminDashboard {
 
         const isUpdating = Boolean(teacherData.teacherId);
         const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateTeacher?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertTeacher?${params}`;
+            ? `https://localhost:7231/RealAdmins/UpdateTeacher?${params}`
+            : `https://localhost:7231/RealAdmins/InsertTeacher?${params}`;
 
         const method = isUpdating ? "PUT" : "POST";
 
@@ -1731,7 +2129,7 @@ class AdminDashboard {
 
     // Thêm phương thức deleteTeacherRequest
     async deleteTeacherRequest(teacherId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteTeacher?id=${teacherId}`, {
+        const response = await fetch(`https://localhost:7231/RealAdmins/DeleteTeacher?id=${teacherId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -1744,546 +2142,6 @@ class AdminDashboard {
         }
         
         return true;
-    }
-
-    loadData() {
-        // Load students data from localStorage
-        const storedStudents = localStorage.getItem('students');
-        if (storedStudents) {
-            this.studentsData = JSON.parse(storedStudents);
-        } else {
-            // Default data
-            this.studentsData = [
-                { id: 1, firstName: 'Nguyễn', lastName: 'Văn A', email: 'vana@example.com', gender: 'Nam', address: 'Hà Nội', dob: '2005-05-15', phone: '0987654321', password: 'password123', cohortId: 1 }
-            ];
-            localStorage.setItem('students', JSON.stringify(this.studentsData));
-        }
-        
-        // Load teachers data from localStorage
-        const storedTeachers = localStorage.getItem('teachers');
-        if (storedTeachers) {
-            this.teachersData = JSON.parse(storedTeachers);
-        } else {
-            // Default data
-            this.teachersData = [
-                { id: 1, firstName: 'Trần', lastName: 'Thị B', email: 'thib@example.com', gender: 'Nữ', address: 'TP HCM', dob: '1985-03-20', phone: '0987654322', password: 'password456' }
-            ];
-            localStorage.setItem('teachers', JSON.stringify(this.teachersData));
-        }
-        
-        // Load cohorts data from localStorage
-        const storedCohorts = localStorage.getItem('cohorts');
-        if (storedCohorts) {
-            this.cohortsData = JSON.parse(storedCohorts);
-        } else {
-            // Default data
-            this.cohortsData = [
-                { id: 1, name: '12A1', description: 'Lớp chuyên Toán' }
-            ];
-            localStorage.setItem('cohorts', JSON.stringify(this.cohortsData));
-        }
-        
-        // Load subjects data from localStorage
-        const storedSubjects = localStorage.getItem('subjects');
-        if (storedSubjects) {
-            this.subjectsData = JSON.parse(storedSubjects);
-        } else {
-            // Default data
-            this.subjectsData = [
-                { id: 1, name: 'Toán học', code: 'MATH', description: 'Môn Toán học', credits: 4 },
-                { id: 2, name: 'Vật lý', code: 'PHY', description: 'Môn Vật lý', credits: 3 },
-                { id: 3, name: 'Hóa học', code: 'CHEM', description: 'Môn Hóa học', credits: 3 }
-            ];
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-        }
-        
-        // Load assignments data from localStorage
-        const storedAssignments = localStorage.getItem('assignments');
-        if (storedAssignments) {
-            this.assignmentsData = JSON.parse(storedAssignments);
-        } else {
-            // Default data
-            this.assignmentsData = [
-                { id: 1, teacherId: 1, subjectId: 1, cohortId: 1, schedule: 'Thứ 2, 7:00 - 9:30', status: 'active' }
-            ];
-            localStorage.setItem('assignments', JSON.stringify(this.assignmentsData));
-        }
-    }
-
-    initPageHandlers() {
-        const menuItems = document.querySelectorAll('.sidebar li');
-        const pageContent = document.getElementById('pageContent');
-        
-        // Xử lý click menu
-        menuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // Remove active class from all items
-                menuItems.forEach(i => i.classList.remove('active'));
-                
-                // Add active class to clicked item
-                item.classList.add('active');
-                
-                // Get page name from data attribute
-                const pageName = item.getAttribute('data-page');
-                
-                // Update page content
-                this.loadPage(pageName);
-            });
-        });
-        
-        // Load default page
-        const defaultPage = 'dashboard';
-        this.loadPage(defaultPage);
-    }
-
-    renderSubjectsPage() {
-        const pageContent = document.getElementById('pageContent');
-        
-        let html = `
-        <div class="subjects-management">
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-book"></i> Quản lý môn học</h3>
-                </div>
-                <div class="card-body">
-                    <div class="actions-bar" style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                        <button id="addSubjectBtn" class="btn-primary">
-                            <i class="fas fa-plus"></i> Thêm môn học mới
-                        </button>
-                        <div class="search-box">
-                            <input type="text" id="subjectSearchInput" placeholder="Tìm kiếm môn học...">
-                            <i class="fas fa-search"></i>
-                        </div>
-                    </div>
-                    <div class="table-container">
-                        <table id="subjectTable">
-                            <thead>
-                                <tr>
-                                    <th>Mã môn học</th>
-                                    <th>Tên môn học</th>
-                                    <th>Mô tả</th>
-                                    <th>Số tín chỉ</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-        
-        // Generate table rows
-        this.subjectsData.forEach(subject => {
-            html += `
-                <tr>
-                    <td>${subject.code}</td>
-                    <td>${subject.name}</td>
-                    <td>${subject.description}</td>
-                    <td>${subject.credits}</td>
-                    <td>
-                        <button class="btn-edit" data-id="${subject.id}"><i class="fas fa-edit"></i></button>
-                        <button class="btn-delete" data-id="${subject.id}"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>`;
-        });
-        
-        html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Subject Modal -->
-        <div class="modal" id="subjectModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3 id="subjectModalTitle">Thêm môn học mới</h3>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="subjectForm">
-                            <input type="hidden" id="subjectId">
-                            <div class="form-group">
-                                <label for="subjectCode">Mã môn học</label>
-                                <input type="text" id="subjectCode" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectName">Tên môn học</label>
-                                <input type="text" id="subjectName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectDescription">Mô tả</label>
-                                <input type="text" id="subjectDescription">
-                            </div>
-                            <div class="form-group">
-                                <label for="subjectCredits">Số tín chỉ</label>
-                                <input type="number" id="subjectCredits" min="1" max="10" required>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary modal-close">Hủy</button>
-                        <button class="btn btn-primary" id="saveSubjectBtn">Lưu</button>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        
-        pageContent.innerHTML = html;
-        
-        // Set up event handlers
-        this.setupSubjectEventHandlers();
-    }
-    
-    setupSubjectEventHandlers() {
-        const addSubjectBtn = document.getElementById('addSubjectBtn');
-        const subjectModal = document.getElementById('subjectModal');
-        const closeButtons = subjectModal.querySelectorAll('.modal-close');
-        const saveSubjectBtn = document.getElementById('saveSubjectBtn');
-        const searchInput = document.getElementById('subjectSearchInput');
-        
-        // Add subject button click
-        addSubjectBtn.addEventListener('click', () => {
-            document.getElementById('subjectModalTitle').textContent = 'Thêm môn học mới';
-            document.getElementById('subjectForm').reset();
-            document.getElementById('subjectId').value = '';
-            subjectModal.classList.add('show');
-        });
-        
-        // Close modal
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                subjectModal.classList.remove('show');
-            });
-        });
-        
-        // Save subject
-        saveSubjectBtn.addEventListener('click', () => {
-            const subjectId = document.getElementById('subjectId').value;
-            const code = document.getElementById('subjectCode').value;
-            const name = document.getElementById('subjectName').value;
-            const description = document.getElementById('subjectDescription').value;
-            const credits = document.getElementById('subjectCredits').value;
-            
-            if (!code || !name || !credits) {
-                alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
-                return;
-            }
-            
-            if (subjectId) {
-                // Update existing subject
-                const index = this.subjectsData.findIndex(s => s.id == subjectId);
-                if (index !== -1) {
-                    this.subjectsData[index] = {
-                        ...this.subjectsData[index],
-                        code,
-                        name,
-                        description,
-                        credits: parseInt(credits)
-                    };
-                }
-            } else {
-                // Add new subject
-                const newId = this.subjectsData.length > 0 ? Math.max(...this.subjectsData.map(s => s.id)) + 1 : 1;
-                this.subjectsData.push({
-                    id: newId,
-                    code,
-                    name,
-                    description,
-                    credits: parseInt(credits)
-                });
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-            
-            // Reload page
-            this.renderSubjectsPage();
-            
-            // Hide modal
-            subjectModal.classList.remove('show');
-            
-            // Show success notification
-            showNotification('Môn học đã được lưu thành công!', 'success');
-        });
-        
-        // Edit subject buttons
-        const editButtons = document.querySelectorAll('#subjectTable .btn-edit');
-        editButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const subjectId = button.getAttribute('data-id');
-                const subject = this.subjectsData.find(s => s.id == subjectId);
-                
-                if (subject) {
-                    document.getElementById('subjectModalTitle').textContent = 'Chỉnh sửa môn học';
-                    document.getElementById('subjectId').value = subject.id;
-                    document.getElementById('subjectCode').value = subject.code;
-                    document.getElementById('subjectName').value = subject.name;
-                    document.getElementById('subjectDescription').value = subject.description || '';
-                    document.getElementById('subjectCredits').value = subject.credits;
-                    
-                    subjectModal.classList.add('show');
-                }
-            });
-        });
-        
-        // Delete subject buttons
-        const deleteButtons = document.querySelectorAll('#subjectTable .btn-delete');
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const subjectId = button.getAttribute('data-id');
-                
-                // Show confirmation dialog
-                showConfirmation('Bạn có chắc chắn muốn xóa môn học này?', () => {
-                    this.subjectsData = this.subjectsData.filter(s => s.id != subjectId);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('subjects', JSON.stringify(this.subjectsData));
-                    
-                    // Reload page
-                    this.renderSubjectsPage();
-                    
-                    // Show success notification
-                    showNotification('Môn học đã được xóa thành công!', 'success');
-                });
-            });
-        });
-        
-        // Search functionality
-        searchInput.addEventListener('input', () => {
-            const searchText = searchInput.value.toLowerCase();
-            const rows = document.querySelectorAll('#subjectTable tbody tr');
-            
-            rows.forEach(row => {
-                const code = row.cells[0].textContent.toLowerCase();
-                const name = row.cells[1].textContent.toLowerCase();
-                const description = row.cells[2].textContent.toLowerCase();
-                
-                if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    async initializeSubjectManagement() {
-        await this.loadSubjects();
-        this.setupSubjectEventListeners();
-    }
-
-    async loadSubjects() {
-        try {
-            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
-            const data = await response.json();
-            console.log("API Subjects Response:", data);
-    
-            const subjects = data.data; 
-    
-            if (!Array.isArray(subjects)) {
-                console.error("Lỗi: API không trả về một mảng môn học!");
-                return;
-            }
-            
-            // Lưu dữ liệu môn học để sử dụng sau này
-            this.subjectsData = subjects;
-            
-            // Cập nhật bảng
-            const tbody = document.querySelector('#subjectTable tbody');
-            tbody.innerHTML = subjects.map(subject => `
-                <tr>
-                    <td>${subject.code || '-'}</td>
-                    <td>${subject.name}</td>
-                    <td>${subject.description || '-'}</td>
-                    <td>${subject.credits}</td>
-                    <td>
-                        <button onclick="adminDashboard.openSubjectModal('${subject.subjectId}')" class="btn-edit" data-id="${subject.subjectId}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="adminDashboard.deleteSubject('${subject.subjectId}')" class="btn-delete" data-id="${subject.subjectId}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error("Lỗi khi tải danh sách môn học:", error);
-            this.showNotification(
-                'error',
-                'Lỗi tải dữ liệu',
-                'Đã xảy ra lỗi khi tải danh sách môn học. Vui lòng thử lại sau.'
-            );
-        }
-    }
-
-    setupSubjectEventListeners() {
-        document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
-            this.openSubjectModal();
-        });
-
-        document.getElementById('subjectForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.saveSubject();
-        });
-
-        // Thêm sự kiện tìm kiếm
-        document.getElementById('searchSubject')?.addEventListener('input', (e) => {
-            this.searchSubjects(e.target.value);
-        });
-    }
-
-    openSubjectModal(subjectId = null) {
-        const modal = document.getElementById('subjectModal');
-        const form = document.getElementById('subjectForm');
-        const modalTitle = document.getElementById('subjectModalTitle');
-        
-        // Đặt tiêu đề modal
-        modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
-        
-        // Reset form
-        form.reset();
-        
-        // Thiết lập dữ liệu nếu là chỉnh sửa
-        if (subjectId) {
-            const subject = this.subjectsData.find(s => s.subjectId == subjectId);
-            if (subject) {
-                document.getElementById('subjectId').value = subject.subjectId;
-                document.getElementById('subjectCode').value = subject.code || '';
-                document.getElementById('subjectName').value = subject.name || '';
-                document.getElementById('subjectDescription').value = subject.description || '';
-                document.getElementById('subjectCredits').value = subject.credits || '';
-            }
-        } else {
-            document.getElementById('subjectId').value = '';
-        }
-        
-        // Mở modal
-        this.openModal('subjectModal');
-    }
-
-    async saveSubject() {
-        const form = document.getElementById('subjectForm');
-        const formData = new FormData(form);
-        const subjectData = {};
-        
-        formData.forEach((value, key) => {
-            subjectData[key] = value;
-        });
-        
-        try {
-            // Xác thực dữ liệu
-            if (!subjectData.code || !subjectData.name || !subjectData.credits) {
-                throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
-            }
-            
-            // Gọi hàm API để lưu dữ liệu
-            await this.saveSubjectRequest(subjectData);
-            
-            // Đóng modal
-            this.closeModal('subjectModal');
-            
-            // Cập nhật danh sách
-            await this.loadSubjects();
-            
-            // Hiển thị thông báo thành công
-            const isUpdate = subjectData.subjectId && subjectData.subjectId.trim() !== '';
-            this.showNotification(
-                'success',
-                isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
-                isUpdate ? 'Thông tin môn học đã được cập nhật.' : 'Môn học mới đã được thêm vào hệ thống.'
-            );
-        } catch (error) {
-            console.error('Lỗi khi lưu môn học:', error);
-            this.showNotification(
-                'error',
-                'Lỗi lưu dữ liệu',
-                error.message || 'Có lỗi xảy ra khi lưu môn học!'
-            );
-        }
-    }
-    
-    async saveSubjectRequest(subjectData) {
-        const params = new URLSearchParams({
-            id: subjectData.subjectId || "",
-            code: subjectData.code,
-            name: subjectData.name,
-            description: subjectData.description || "",
-            credits: subjectData.credits
-        });
-
-        const isUpdating = Boolean(subjectData.subjectId);
-        const url = isUpdating
-            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateSubject?${params}`
-            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertSubject?${params}`;
-
-        const method = isUpdating ? "PUT" : "POST";
-
-        const response = await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error(`Lỗi ${isUpdating ? "cập nhật" : "tạo mới"} môn học: ${response.status}`);
-        
-        return response.json();
-    }
-
-    deleteSubject(subjectId) {
-        this.showConfirmation(
-            'Xác nhận xóa môn học',
-            'Bạn có chắc chắn muốn xóa môn học này không? Dữ liệu không thể khôi phục sau khi xóa.',
-            async () => {
-                try {
-                    await this.deleteSubjectRequest(subjectId);
-                    await this.loadSubjects();
-                    this.showNotification(
-                        'success',
-                        'Xóa môn học thành công',
-                        'Môn học đã được xóa khỏi hệ thống.'
-                    );
-                } catch (error) {
-                    console.error('Error deleting subject:', error);
-                    this.showNotification(
-                        'error',
-                        'Lỗi xóa môn học',
-                        'Đã xảy ra lỗi khi xóa môn học. Vui lòng thử lại sau.'
-                    );
-                }
-            }
-        );
-    }
-    
-    async deleteSubjectRequest(subjectId) {
-        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteSubject?id=${subjectId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Lỗi xóa môn học: ${response.status}`);
-        }
-        
-        return true;
-    }
-
-    searchSubjects(query) {
-        const rows = document.querySelectorAll('#subjectTable tbody tr');
-        const searchText = query.toLowerCase();
-        
-        rows.forEach(row => {
-            const code = row.cells[0].textContent.toLowerCase();
-            const name = row.cells[1].textContent.toLowerCase();
-            const description = row.cells[2].textContent.toLowerCase();
-            
-            if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
     }
 }
 

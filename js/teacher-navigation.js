@@ -46,11 +46,7 @@ class TeacherNavigation {
                 new TeacherDashboard();
                 break;
             case 'scores':
-                // Không cần khởi tạo lại vì đã có biến scoreManager toàn cục
-                if (window.scoreManager) {
-                    window.scoreManager.loadScores();
-                    window.scoreManager.loadStudentsForScoring();
-                }
+                new TeacherScores();
                 break;
             case 'schedule':
                 new TeacherSchedule();
