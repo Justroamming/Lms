@@ -1,0 +1,53 @@
+<div class="subject-management">
+    <div class="actions-bar">
+        <button id="addSubjectBtn" class="btn-primary">
+            <i class="fas fa-plus"></i> Thêm môn học mới
+        </button>
+        <div class="search-box">
+            <input type="text" id="searchSubject" placeholder="Tìm kiếm môn học...">
+            <i class="fas fa-search"></i>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-book"></i> Danh sách môn học</h3>
+        </div>
+        <div class="table-container">
+            <table id="subjectTable">
+                <thead>
+                    <tr>
+                        <th>Tên môn học</th>
+    
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal thêm/sửa môn học -->
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="subjectModalTitle">Thông tin môn học</h3>
+                <span class="close modal-close">&times;</span>
+            </div>
+            <form id="subjectForm">
+                <input type="hidden" id="subjectId" name="subjectId">      
+                <div class="form-group">
+                    <label for="subjectName">Tên môn học</label>
+                    <input type="text" id="subjectName" name="name" required>
+                </div>
+                
+          
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-close">Hủy</button>
+                    <button type="submit" class="btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

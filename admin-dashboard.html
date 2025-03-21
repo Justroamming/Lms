@@ -254,6 +254,9 @@
                 <li data-page="cohorts">
                     <i class="fas fa-school"></i> Quản lý lớp học
                 </li>
+                <li data-page="subjects">
+                    <i class="fas fa-book"></i> Quản lý môn học
+                </li>
                 <li data-page="assignments">
                     <i class="fas fa-tasks"></i> Phân công giảng dạy
                 </li>
@@ -308,7 +311,7 @@
     <script src="js/admin.js"></script>
     <script>
         // Khởi tạo đối tượng AdminDashboard
-        const adminDashboard = new AdminDashboard();
+        // const adminDashboard = new AdminDashboard();
         
         // Kiểm tra quyền admin
         document.addEventListener('DOMContentLoaded', () => {
@@ -357,10 +360,10 @@
         });
         
         // Hàm đăng xuất
-        function logout() {
-            clearCurrentUser();
-            window.location.href = 'login.html';
-        }
+        // function logout() {
+        //     clearCurrentUser();
+        //     window.location.href = 'login.html';
+        // }
     </script>
 </body>
 </html> 

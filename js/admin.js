@@ -18,6 +18,8 @@ class AdminDashboard {
 
         // Khởi tạo xử lý popup
         this.setupPopupHandlers();
+
+        this.setupModalCloseHandlers();
     }
 
     initializeNavigation() {
@@ -74,6 +76,9 @@ class AdminDashboard {
                 break;
             case 'cohorts':
                 this.initializeCohortManagement();
+                break;
+            case 'subjects':
+                this.initializeSubjectManagement();
                 break;
             case 'assignments':
                 this.initializeAssignmentManagement();
@@ -1112,9 +1117,222 @@ class AdminDashboard {
     }
 
     
+    async initializeSubjectManagement() {
+        await this.loadSubjects();
+        this.setupSubjectEventListeners();
+    }
 
+    async loadSubjects() {
+        try {
+            const response = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllSubjects');
+            const data = await response.json();
+            console.log("API Subjects Response:", data);
+    
+            const subjects = data.data; 
+    
+            if (!Array.isArray(subjects)) {
+                console.error("Lỗi: API không trả về một mảng môn học!");
+                return;
+            }
+            
+            this.subjectsData = subjects;
+            
+            // Kiểm tra xem có phần tử tbody không
+            const tbody = document.querySelector('#subjectTable tbody');
+            if (!tbody) {
+                console.error("Không tìm thấy phần tử #subjectTable tbody trong DOM");
+                return;
+            }
+            
+            tbody.innerHTML = subjects.map(subject => `
+                <tr>
+                    <td>${subject.subjectName}</td>
+                    <td>
+                        <button onclick="adminDashboard.openSubjectModal('${subject.subjectId}')" class="btn-edit" data-id="${subject.subjectId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="adminDashboard.deleteSubject('${subject.subjectId}')" class="btn-delete" data-id="${subject.subjectId}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách môn học:", error);
+            this.showNotification(
+                'error',
+                'Lỗi tải dữ liệu',
+                'Đã xảy ra lỗi khi tải danh sách môn học. Vui lòng thử lại sau.'
+            );
+        }
+    }
 
+    setupSubjectEventListeners() {
+        document.getElementById('addSubjectBtn')?.addEventListener('click', () => {
+            this.openSubjectModal();
+        });
 
+        document.getElementById('subjectForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveSubject();
+        });
+
+    
+        document.getElementById('searchSubject')?.addEventListener('input', (e) => {
+            this.searchSubjects(e.target.value);
+        });
+    }
+
+    openSubjectModal(subjectId = null) {
+        const modal = document.getElementById('subjectModal');
+        const form = document.getElementById('subjectForm');
+        const modalTitle = document.getElementById('subjectModalTitle');
+        
+
+        modalTitle.textContent = subjectId ? 'Chỉnh sửa môn học' : 'Thêm môn học mới';
+        
+        form.reset();
+        
+        // Thiết lập dữ liệu nếu là chỉnh sửa
+        if (subjectId) {
+            const subject = this.subjectsData.find(s => s.subjectId == subjectId);
+            if (subject) {
+                document.getElementById('subjectId').value = subject.subjectId;
+               
+                document.getElementById('subjectName').value = subject.subjectName || '';
+               
+            }
+        } else {
+            document.getElementById('subjectId').value = '';
+        }
+        
+        // Mở modal
+        this.openModal('subjectModal');
+    }
+
+    async saveSubject() {
+        const form = document.getElementById('subjectForm');
+        const formData = new FormData(form);
+        const subjectData = {};
+        
+        formData.forEach((value, key) => {
+            subjectData[key] = value;
+        });
+        
+        try {
+            // Xác thực dữ liệu
+            if (!subjectData.name) {
+                throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc!');
+            }
+            
+            // Gọi hàm API để lưu dữ liệu
+            await this.saveSubjectRequest(subjectData);
+            
+            // Đóng modal
+            this.closeModal('subjectModal');
+            
+            // Cập nhật danh sách
+            await this.loadSubjects();
+            
+            // Hiển thị thông báo thành công
+            const isUpdate = subjectData.subjectId && subjectData.subjectId.trim() !== '';
+            this.showNotification(
+                'success',
+                isUpdate ? 'Cập nhật thành công' : 'Thêm mới thành công',
+                isUpdate ? 'Thông tin môn học đã được cập nhật.' : 'Môn học mới đã được thêm vào hệ thống.'
+            );
+        } catch (error) {
+            console.error('Lỗi khi lưu môn học:', error);
+            this.showNotification(
+                'error',
+                'Lỗi lưu dữ liệu',
+                error.message || 'Có lỗi xảy ra khi lưu môn học!'
+            );
+        }
+    }
+    
+    async saveSubjectRequest(subjectData) {
+        const params = new URLSearchParams({
+            id: subjectData.subjectId || "",
+           
+            sName: subjectData.subjectName,
+       
+        });
+
+        const isUpdating = Boolean(subjectData.subjectId);
+        const url = isUpdating
+            ? `https://scoreapi-1zqy.onrender.com/RealAdmins/UpdateASubject?${params}`
+            : `https://scoreapi-1zqy.onrender.com/RealAdmins/InsertASubject?${params}`;
+
+        const method = isUpdating ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Lỗi ${isUpdating ? "cập nhật" : "tạo mới"} môn học: ${response.status}`);
+        
+        return response.json();
+    }
+
+    deleteSubject(subjectId) {
+        this.showConfirmation(
+            'Xác nhận xóa môn học',
+            'Bạn có chắc chắn muốn xóa môn học này không? Dữ liệu không thể khôi phục sau khi xóa.',
+            async () => {
+                try {
+                    await this.deleteSubjectRequest(subjectId);
+                    await this.loadSubjects();
+                    this.showNotification(
+                        'success',
+                        'Xóa môn học thành công',
+                        'Môn học đã được xóa khỏi hệ thống.'
+                    );
+                } catch (error) {
+                    console.error('Error deleting subject:', error);
+                    this.showNotification(
+                        'error',
+                        'Lỗi xóa môn học',
+                        'Đã xảy ra lỗi khi xóa môn học. Vui lòng thử lại sau.'
+                    );
+                }
+            }
+        );
+    }
+    
+    async deleteSubjectRequest(subjectId) {
+        const response = await fetch(`https://scoreapi-1zqy.onrender.com/RealAdmins/DeleteASubject?id=${subjectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Lỗi xóa môn học: ${response.status}`);
+        }
+        
+        return true;
+    }
+
+    searchSubjects(query) {
+        const rows = document.querySelectorAll('#subjectTable tbody tr');
+        const searchText = query.toLowerCase();
+        
+        rows.forEach(row => {
+            const code = row.cells[0].textContent.toLowerCase();
+            const name = row.cells[1].textContent.toLowerCase();
+            const description = row.cells[2].textContent.toLowerCase();
+            
+            if (code.includes(searchText) || name.includes(searchText) || description.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
     async initializeAssignmentManagement() {
         await this.loadAssignments();
         this.setupAssignmentEventListeners();
@@ -1414,6 +1632,26 @@ class AdminDashboard {
         // Trigger reflow
         modal.offsetHeight;
         modal.classList.add('show');
+        
+        // Add event listeners to close buttons
+        const closeButtons = modal.querySelectorAll('.modal-close');
+        closeButtons.forEach(button => {
+            // Remove any existing event listeners to prevent duplicates
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Add new event listener
+            newButton.addEventListener('click', () => {
+                this.closeModal(modalId);
+            });
+        });
+        
+        // Setup click outside modal to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal(modalId);
+            }
+        });
     }
 
     // Thêm event listeners cho đóng modal khi click ra ngoài
@@ -1514,7 +1752,18 @@ class AdminDashboard {
             });
         }
     }
-
+    setupModalCloseHandlers() {
+        // Add global handler for modal close buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-close')) {
+                // Find the parent modal
+                let modal = e.target.closest('.modal');
+                if (modal && modal.id) {
+                    this.closeModal(modal.id);
+                }
+            }
+        });
+    }
     /**
      * Hiển thị popup xác nhận với callback
      * @param {string} title - Tiêu đề popup
