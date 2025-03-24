@@ -112,7 +112,7 @@ class TeacherNavigation {
             fullnameElement.textContent = `${teacher.lastName} ${teacher.firstName}`;
             
             // Xác định môn học mặc định từ dữ liệu hiện có
-            let subjectName = teacher.subjectName || "Math";
+            let subjectName = teacher.subjectName || "Unknow";
             
             // Kiểm tra xem có ID giáo viên không
             if (teacher.teacherId) {

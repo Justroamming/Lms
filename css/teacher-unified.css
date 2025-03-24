@@ -195,7 +195,7 @@ body::after {
     z-index: 900;
     border-radius: 0 20px 20px 0;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
-    height: 100%;
+
     overflow-y: auto;
 }
 
@@ -683,7 +683,7 @@ tbody td:last-child {
 
 #classFilter {
     width: 100%;
-    padding: 12px 15px;
+    padding: 8px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -714,6 +714,7 @@ tbody td:last-child {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     animation: modalFadeIn 0.3s ease-out;
+    padding: 30px
 }
 
 .modal-header {
@@ -847,6 +848,22 @@ tbody td:last-child {
     border-radius: 5px;
     background-color: #fff;
     color: #333;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+}
+
+#studentSearch {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 35px;
 }
 
 /* Profile Styles */

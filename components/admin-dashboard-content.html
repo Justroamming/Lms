@@ -52,21 +52,54 @@
         <!-- Thống kê nhanh -->
         <div class="dashboard-card">
             <div class="card-header">
-                <h3><i class="fas fa-chart-bar"></i> Thống kê nhanh</h3>
+                <h3><i class="fas fa-bolt"></i> Thống kê nhanh</h3>
             </div>
             <div class="card-body">
                 <div class="quick-stats">
-                    <div class="quick-stat-item">
-                        <span class="label">Tỷ lệ Nam/Nữ:</span>
-                        <span class="value" id="genderRatio">55% / 45%</span>
+                    <div class="quick-stat-item animated">
+                        <div class="quick-stat-icon gender-icon">
+                            <i class="fas fa-venus-mars"></i>
+                        </div>
+                        <div class="quick-stat-content">
+                            <span class="label">Tỷ lệ Nam/Nữ</span>
+                            <div class="value-container">
+                                <span class="value" id="genderRatio">55% / 45%</span>
+                                <div class="progress-bar gender-bar">
+                                    <div class="progress-male"></div>
+                                    <div class="progress-female"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="quick-stat-item">
-                        <span class="label">Lớp đông nhất:</span>
-                        <span class="value" id="largestClass">12A1 (35 học sinh)</span>
+
+                    <div class="quick-stat-item animated">
+                        <div class="quick-stat-icon largest-icon">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <div class="quick-stat-content">
+                            <span class="label">Lớp đông nhất</span>
+                            <span class="value" id="largestClass">12A1 (35 học sinh)</span>
+                            <div class="progress-container">
+                                <div class="progress-bar largest-bar">
+                                    <div class="progress" style="width: 90%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="quick-stat-item">
-                        <span class="label">Lớp ít nhất:</span>
-                        <span class="value" id="smallestClass">12A3 (28 học sinh)</span>
+
+                    <div class="quick-stat-item animated">
+                        <div class="quick-stat-icon smallest-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="quick-stat-content">
+                            <span class="label">Lớp ít nhất</span>
+                            <span class="value" id="smallestClass">12A3 (28 học sinh)</span>
+                            <div class="progress-container">
+                                <div class="progress-bar smallest-bar">
+                                    <div class="progress" style="width: 40%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

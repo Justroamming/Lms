@@ -99,6 +99,68 @@ class AdminDashboard {
         document.getElementById('totalTeachers').textContent = stats.teachers;
         document.getElementById('totalCohorts').textContent = stats.cohorts;
 
+        // Cập nhật thông tin tăng trưởng
+        const studentGrowthElement = document.getElementById('studentGrowth');
+        const teacherGrowthElement = document.getElementById('teacherGrowth');
+        const cohortGrowthElement = document.getElementById('cohortGrowth');
+
+        if (studentGrowthElement) {
+            if (stats.studentGrowth > 0) {
+                studentGrowthElement.textContent = `+${stats.studentGrowth}% tháng này`;
+                studentGrowthElement.parentElement.classList.remove('down', 'stable');
+                studentGrowthElement.parentElement.classList.add('up');
+                studentGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else if (stats.studentGrowth < 0) {
+                studentGrowthElement.textContent = `${stats.studentGrowth}% tháng này`;
+                studentGrowthElement.parentElement.classList.remove('up', 'stable');
+                studentGrowthElement.parentElement.classList.add('down');
+                studentGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else {
+                studentGrowthElement.textContent = `Ổn định`;
+                studentGrowthElement.parentElement.classList.remove('up', 'down');
+                studentGrowthElement.parentElement.classList.add('stable');
+                studentGrowthElement.parentElement.querySelector('i').className = 'fas fa-equals';
+            }
+        }
+
+        if (teacherGrowthElement) {
+            if (stats.teacherGrowth > 0) {
+                teacherGrowthElement.textContent = `+${stats.teacherGrowth}% tháng này`;
+                teacherGrowthElement.parentElement.classList.remove('down', 'stable');
+                teacherGrowthElement.parentElement.classList.add('up');
+                teacherGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else if (stats.teacherGrowth < 0) {
+                teacherGrowthElement.textContent = `${stats.teacherGrowth}% tháng này`;
+                teacherGrowthElement.parentElement.classList.remove('up', 'stable');
+                teacherGrowthElement.parentElement.classList.add('down');
+                teacherGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else {
+                teacherGrowthElement.textContent = `Ổn định`;
+                teacherGrowthElement.parentElement.classList.remove('up', 'down');
+                teacherGrowthElement.parentElement.classList.add('stable');
+                teacherGrowthElement.parentElement.querySelector('i').className = 'fas fa-equals';
+            }
+        }
+
+        if (cohortGrowthElement) {
+            if (stats.cohortGrowth > 0) {
+                cohortGrowthElement.textContent = `+${stats.cohortGrowth} lớp mới`;
+                cohortGrowthElement.parentElement.classList.remove('down', 'stable');
+                cohortGrowthElement.parentElement.classList.add('up');
+                cohortGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else if (stats.cohortGrowth < 0) {
+                cohortGrowthElement.textContent = `${stats.cohortGrowth} lớp`;
+                cohortGrowthElement.parentElement.classList.remove('up', 'stable');
+                cohortGrowthElement.parentElement.classList.add('down');
+                cohortGrowthElement.parentElement.querySelector('i').className = 'fas fa-chart-line';
+            } else {
+                cohortGrowthElement.textContent = `Không thay đổi`;
+                cohortGrowthElement.parentElement.classList.remove('up', 'down');
+                cohortGrowthElement.parentElement.classList.add('stable');
+                cohortGrowthElement.parentElement.querySelector('i').className = 'fas fa-equals';
+            }
+        }
+
         // Khởi tạo biểu đồ phân bố học sinh
         await this.initializeStudentDistributionChart();
 
@@ -212,6 +274,15 @@ class AdminDashboard {
             const genderRatioElement = document.getElementById('genderRatio');
             if (genderRatioElement) {
                 genderRatioElement.textContent = `${malePercent}% / ${femalePercent}%`;
+                
+                // Cập nhật thanh tiến trình
+                const progressMale = document.querySelector('.progress-male');
+                const progressFemale = document.querySelector('.progress-female');
+                
+                if (progressMale && progressFemale) {
+                    progressMale.style.width = `${malePercent}%`;
+                    progressFemale.style.width = `${femalePercent}%`;
+                }
             }
 
             // Lấy thông tin về lớp học
@@ -231,19 +302,33 @@ class AdminDashboard {
 
             // Tìm lớp đông nhất và ít nhất
             if (cohortStats.length > 0) {
-            const sortedCohorts = cohortStats.sort((a, b) => b.count - a.count);
-            const largest = sortedCohorts[0];
-            const smallest = sortedCohorts[sortedCohorts.length - 1];
+                const sortedCohorts = cohortStats.sort((a, b) => b.count - a.count);
+                const largest = sortedCohorts[0];
+                const smallest = sortedCohorts[sortedCohorts.length - 1];
+                const maxStudents = largest.count;
 
                 const largestClassElement = document.getElementById('largestClass');
                 const smallestClassElement = document.getElementById('smallestClass');
                 
                 if (largestClassElement) {
                     largestClassElement.textContent = `${largest.name} (${largest.count} học sinh)`;
+                    
+                    // Cập nhật thanh tiến trình lớp đông nhất
+                    const largestProgress = document.querySelector('.largest-bar .progress');
+                    if (largestProgress) {
+                        largestProgress.style.width = '100%';
+                    }
                 }
                 
                 if (smallestClassElement) {
                     smallestClassElement.textContent = `${smallest.name} (${smallest.count} học sinh)`;
+                    
+                    // Cập nhật thanh tiến trình lớp ít nhất
+                    const smallestProgress = document.querySelector('.smallest-bar .progress');
+                    if (smallestProgress && maxStudents > 0) {
+                        const percentWidth = Math.round((smallest.count / maxStudents) * 100);
+                        smallestProgress.style.width = `${percentWidth}%`;
+                    }
                 }
             } else {
                 console.warn('Không có dữ liệu lớp học hoặc danh sách rỗng');
@@ -315,25 +400,18 @@ class AdminDashboard {
                         <button class="btn-edit" data-id="${student.studentId}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-delete" data-id="${student.studentId}" 
-                            onclick="console.log('Delete button clicked directly for ID: ${student.studentId}')">
+                        <button class="btn-delete" data-id="${student.studentId}">
                             <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn-print" data-id="${student.studentId}" data-cohort="${student.cohortId || ''}">
+                            <i class="fas fa-print"></i>
                         </button>
                     </td>
                 </tr>
             `}).join('');
             
-            // Thêm event listeners trực tiếp cho các nút delete
-            const deleteButtons = tbody.querySelectorAll('.btn-delete');
-            deleteButtons.forEach(button => {
-                const studentId = button.dataset.id;
-                button.addEventListener('click', (e) => {
-                    console.log('Direct event: Delete button clicked for ID:', studentId);
-                    e.stopPropagation(); // Ngăn chặn event bubbling
-                });
-            });
-            
-            console.log('Total delete buttons added:', deleteButtons.length);
+            // Bỏ qua việc thêm event listeners trực tiếp vì sẽ xử lý thông qua event delegation ở setupStudentEventListeners
+            console.log('Student table updated with', students.length, 'rows');
         } catch (error) {
             console.error("Error loading students:", error);
         }
@@ -356,25 +434,51 @@ class AdminDashboard {
             // Sử dụng event delegation cho các nút trong bảng
             studentTable.addEventListener('click', (e) => {
                 // Xác định nút đã được nhấp
-                const target = e.target.closest('.btn-edit, .btn-delete');
-                if (!target) return; // Không phải click vào nút
+                let target = e.target;
                 
-                // Lấy ID học sinh từ thuộc tính data-id hoặc từ phần tử cha
-                const studentId = target.dataset.id || target.closest('tr').dataset.id;
-                if (!studentId) return; // Không tìm thấy ID
+                // Nếu click vào icon bên trong nút
+                if (target.tagName === 'I') {
+                    target = target.parentElement;
+                }
+                
+                // Kiểm tra xem có phải là nút edit hoặc delete không
+                if (!target.classList.contains('btn-edit') && !target.classList.contains('btn-delete')) {
+                    return; // Không phải click vào nút
+                }
+                
+                // Lấy ID học sinh từ thuộc tính data-id
+                const studentId = target.dataset.id;
+                if (!studentId) {
+                    console.error('Không tìm thấy ID học sinh');
+                    return; // Không tìm thấy ID
+                }
+                
+                // Ngăn chặn sự kiện mặc định và lan truyền
+                e.preventDefault();
+                e.stopPropagation();
                 
                 // Xử lý tương ứng với loại nút
                 if (target.classList.contains('btn-edit')) {
                     console.log('Edit student:', studentId);
                     this.openStudentModal(studentId);
                 } else if (target.classList.contains('btn-delete')) {
-                    console.log('Delete student:', studentId);
+                    console.log('Delete student from event delegation:', studentId);
                     this.deleteStudent(studentId);
                 }
-                
-                // Ngăn sự kiện lan ra
-                e.preventDefault();
-                e.stopPropagation();
+            });
+            
+            // Thêm sự kiện trực tiếp cho các nút xóa (để xử lý trường hợp sự kiện không lan truyền)
+            const deleteButtons = studentTable.querySelectorAll('.btn-delete');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const studentId = button.dataset.id;
+                    if (studentId) {
+                        console.log('Delete student from direct event:', studentId);
+                        this.deleteStudent(studentId);
+                    }
+                });
             });
         }
     }
@@ -584,6 +688,13 @@ class AdminDashboard {
         console.log('deleteStudent called for ID:', studentId);
         
         try {
+            // Log để kiểm tra popup trước khi hiển thị
+            console.log('Popup exists before showing:', !!document.getElementById('confirmationPopup'));
+            this.checkPopupStatus(); // Kiểm tra trạng thái của popup hiện tại
+            
+            // Đảm bảo các phần tử popup tồn tại
+            this.ensurePopupsExist();
+            
             // Sử dụng phương thức hiển thị popup mạnh hơn
             this.forceShowConfirmation(
                 'Xác nhận xóa học sinh',
@@ -615,23 +726,19 @@ class AdminDashboard {
                 }
             );
             
-            // Kiểm tra trạng thái popup sau khi hiển thị
+            // Kiểm tra popup sau khi hiển thị
             setTimeout(() => {
-                this.checkPopupStatus();
+                console.log('Popup exists after showing:', !!document.getElementById('confirmationPopup'));
+                console.log('Popup visibility after showing:', 
+                    document.getElementById('confirmationPopup')?.style.visibility);
+                this.checkPopupStatus(); // Kiểm tra lại trạng thái popup
             }, 100);
             
         } catch (error) {
-            console.error('Lỗi trong phương thức deleteStudent:', error);
-            // Sử dụng xác nhận thông thường nếu có lỗi với popup
-            if (window.confirm('Bạn có chắc chắn muốn xóa học sinh này không? Dữ liệu không thể khôi phục sau khi xóa.')) {
-                try {
-                    await this.deleteStudentRequest(studentId);
-                    await this.loadStudents();
-                    alert('Xóa học sinh thành công!');
-                } catch (error) {
-                    console.error('Lỗi khi xóa học sinh (fallback):', error);
-                    alert('Lỗi xóa học sinh. Vui lòng thử lại sau.');
-                }
+            console.error('Lỗi khi hiển thị popup xác nhận:', error);
+            // Fallback khi có lỗi với popup
+            if (window.confirm('Bạn có chắc chắn muốn xóa học sinh này không?')) {
+                this.deleteStudentRequest(studentId);
             }
         }
     }
@@ -1950,6 +2057,7 @@ class AdminDashboard {
     
     async  getSystemStats() {   
         try {
+            // Lấy dữ liệu hiện tại
             const studentsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllStudents');
             const studentsData = await studentsResponse.json();
             const students = studentsData.data || [];
@@ -1961,16 +2069,83 @@ class AdminDashboard {
             const cohortsResponse = await fetch('https://scoreapi-1zqy.onrender.com/RealAdmins/GetAllCohorts');
             const cohortsData = await cohortsResponse.json();
             const cohorts = cohortsData.data || [];
-    
+
+            // Lấy dữ liệu lịch sử từ localStorage
+            const currentDate = new Date();
+            const currentMonth = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
+            
+            // Dữ liệu lịch sử
+            let previousStats = localStorage.getItem('previousStats');
+            let historyData = {};
+            
+            if (previousStats) {
+                // Nếu đã có dữ liệu lịch sử
+                previousStats = JSON.parse(previousStats);
+                
+                // Chỉ sử dụng dữ liệu lịch sử nếu không phải tháng hiện tại
+                if (previousStats.month !== currentMonth) {
+                    historyData = {
+                        previousStudents: previousStats.students || 0,
+                        previousTeachers: previousStats.teachers || 0,
+                        previousCohorts: previousStats.cohorts || 0
+                    };
+                } else {
+                    // Nếu vẫn là tháng hiện tại, mô phỏng dữ liệu
+                    historyData = this._simulateHistory(students.length, teachers.length, cohorts.length);
+                }
+            } else {
+                // Chưa có dữ liệu lịch sử, mô phỏng
+                historyData = this._simulateHistory(students.length, teachers.length, cohorts.length);
+            }
+            
+            // Lưu dữ liệu hiện tại cho lần sau
+            localStorage.setItem('previousStats', JSON.stringify({
+                month: currentMonth,
+                students: students.length,
+                teachers: teachers.length,
+                cohorts: cohorts.length,
+                timestamp: Date.now()
+            }));
+            
+            // Tính tỷ lệ tăng trưởng
+            const studentGrowth = historyData.previousStudents > 0 
+                ? ((students.length - historyData.previousStudents) / historyData.previousStudents * 100).toFixed(1)
+                : 0;
+                
+            const teacherGrowth = historyData.previousTeachers > 0 
+                ? ((teachers.length - historyData.previousTeachers) / historyData.previousTeachers * 100).toFixed(1)
+                : 0;
+                
+            const cohortGrowth = cohorts.length - (historyData.previousCohorts || 0);
+
             return {
                 students: students.length,
                 teachers: teachers.length,
-                cohorts: cohorts.length
+                cohorts: cohorts.length,
+                studentGrowth: studentGrowth, 
+                teacherGrowth: teacherGrowth,
+                cohortGrowth: cohortGrowth
             };
         } catch (error) {
             console.error("Error fetching system stats:", error);
-            return { students: 0, teachers: 0, cohortss: 0 };
+            return { 
+                students: 0, 
+                teachers: 0, 
+                cohorts: 0,
+                studentGrowth: 0,
+                teacherGrowth: 0,
+                cohortGrowth: 0
+            };
         }
+    }
+
+    // Hàm mô phỏng dữ liệu lịch sử
+    _simulateHistory(studentsCount, teachersCount, cohortsCount) {
+        return {
+            previousStudents: studentsCount > 0 ? Math.floor(studentsCount * 0.95) : 0,
+            previousTeachers: teachersCount > 0 ? teachersCount : 0,
+            previousCohorts: cohortsCount > 0 ? Math.max(0, cohortsCount - 2) : 0
+        };
     }
 
     closeModal(modalId) {
@@ -2577,7 +2752,8 @@ class AdminDashboard {
                             justify-content: center !important;
                             align-items: center !important;
                             opacity: 0;
-                            transition: opacity 0.3s ease;
+                            visibility: hidden;
+                            transition: all 0.3s ease !important;
                         }
                         .popup-overlay.show {
                             opacity: 1 !important;
@@ -2752,7 +2928,7 @@ class AdminDashboard {
     
     // Phương thức hiển thị popup trực tiếp không thông qua animation
     forceShowConfirmation(title, message, onConfirm) {
-        console.log('forceShowConfirmation called');
+        console.log('forceShowConfirmation called with:', { title, message });
         
         // Đảm bảo popup tồn tại
         this.ensurePopupsExist();
@@ -2765,7 +2941,7 @@ class AdminDashboard {
         const cancelBtn = document.getElementById('cancelButton');
         
         if (!popup || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
-            console.error('Popup elements not found, falling back to confirm');
+            console.error('Popup elements not found:', { popup, titleEl, messageEl, confirmBtn, cancelBtn });
             if (window.confirm(message)) {
                 onConfirm();
             }
@@ -2795,7 +2971,7 @@ class AdminDashboard {
             this.hideConfirmation();
         };
         
-        // Hiển thị popup với style inline trực tiếp
+        // Đặt style trực tiếp cho popup
         popup.style.cssText = `
             display: flex !important;
             opacity: 1 !important;
@@ -2807,12 +2983,47 @@ class AdminDashboard {
             width: 100% !important;
             height: 100% !important;
             background-color: rgba(0, 0, 0, 0.7) !important;
+            transition: all 0.3s ease !important;
         `;
         
-        // Log thông tin
+        // Đặt style cho popup-content
+        const popupContent = popup.querySelector('.popup-content');
+        if (popupContent) {
+            popupContent.style.cssText = `
+                background-color: white !important;
+                border-radius: 5px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+                width: 400px !important;
+                max-width: 90% !important;
+                margin: auto !important;
+                animation: popIn 0.3s ease !important;
+                position: relative !important;
+                z-index: 100000 !important;
+            `;
+        }
+        
+        // Thêm class show để kích hoạt animation
+        popup.classList.add('show');
+        
+        // Log thông tin chi tiết
+        console.log('Popup status after showing:', {
+            display: popup.style.display,
+            opacity: popup.style.opacity,
+            visibility: popup.style.visibility,
+            zIndex: popup.style.zIndex,
+            hasShowClass: popup.classList.contains('show'),
+            computedStyle: window.getComputedStyle(popup)
+        });
+        
+        // Kiểm tra lại sau 100ms
         setTimeout(() => {
-            this.checkPopupStatus();
-        }, 50);
+            console.log('Popup status after 100ms:', {
+                display: window.getComputedStyle(popup).display,
+                opacity: window.getComputedStyle(popup).opacity,
+                visibility: window.getComputedStyle(popup).visibility,
+                zIndex: window.getComputedStyle(popup).zIndex
+            });
+        }, 100);
     }
 }
 
