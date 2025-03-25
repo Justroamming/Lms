@@ -1,6 +1,5 @@
 class StudentSchedule {
     constructor() {
-      this.token = localStorage.getItem('token');
       // Giả sử thông tin sinh viên hiện tại được lưu trong sessionStorage dưới dạng chuỗi JSON.
       this.student = JSON.parse(sessionStorage.getItem('currentUser'));
       // Cấu hình lịch: chỉnh startHour/endHour theo nhu cầu.
@@ -87,13 +86,7 @@ class StudentSchedule {
     // Load schedule của sinh viên từ API.
     async loadSchedule() {
       try {
-        const response = await fetch(`https://localhost:7231/ScheduleStudents/GetOneStudentSchedule?id=${this.student.studentId}`, {
-          method: 'GET',
-          headers: {
-              'Authorization': `Bearer ${this.token}`,
-              'Content-Type': 'application/json'
-          }
-      });
+        const response = await fetch(`https://localhost:7231/ScheduleStudents/GetOneStudentSchedule?id=${this.student.studentId}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

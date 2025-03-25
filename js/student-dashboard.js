@@ -1,6 +1,5 @@
 class StudentDashboard {
      constructor() {
-        this.token=localStorage.getItem('token');
         this.student = null; // Lưu thông tin học sinh
         this.fetchStudentData();
     }
@@ -11,13 +10,7 @@ class StudentDashboard {
             const studentId = currentUser ? JSON.parse(currentUser).studentId : null;
             if (!studentId) throw new Error('Không tìm thấy ID học sinh');
 
-            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentById?id=${studentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentById?id=${studentId}`);
             if (!response.ok) throw new Error('Lỗi khi lấy dữ liệu học sinh');
 
             const result = await response.json();
@@ -36,13 +29,24 @@ class StudentDashboard {
         this.loadDashboardStats();
         this.loadRecentScores();
         this.loadUpcomingExams();
+     //   this.loadSubjectProgress();
         this.updateDateTime();
     }
 
     async loadStudentInfo() {
         const welcomeName = document.getElementById('studentNameWelcome');
-        if (welcomeName && this.student) {
-            welcomeName.textContent = `${this.student.lastName} ${this.student.firstName}`;
+        const headerName = document.getElementById('studentName');
+        
+        if (this.student) {
+            const fullName = `${this.student.lastName} ${this.student.firstName}`;
+            
+            if (welcomeName) {
+                welcomeName.textContent = fullName;
+            }
+            
+            if (headerName) {
+                headerName.textContent = fullName;
+            }
         }
     }
 
@@ -69,13 +73,7 @@ class StudentDashboard {
     
         try {
             // Fetch overall stats
-            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`);
             if (!response.ok) throw new Error('Lỗi khi tải thống kê');
     
             const statsArray = await response.json();
@@ -91,16 +89,12 @@ class StudentDashboard {
                 stats.overallAverageScore ? parseFloat(stats.overallAverageScore).toFixed(2) : '0.00';
     
             // Fetch future test dates
-            const testResponse = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const testResponse = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
             if (!testResponse.ok) throw new Error('Lỗi khi tải ngày kiểm tra');
     
             const tests = await testResponse.json();
+    
+            console.log("Fetched test dates:", tests); // Debugging line
     
             let daysToExam = 'N/A';
             if (Array.isArray(tests) && tests.length > 0) {
@@ -111,13 +105,16 @@ class StudentDashboard {
                 tests.sort((a, b) => new Date(a.testDate) - new Date(b.testDate));
     
                 const nearestTestDate = new Date(tests[0].testDate);
+                console.log("Nearest test date:", nearestTestDate.toISOString()); // Debugging line
     
                 // Get today's date (UTC)
                 const today = new Date();
                 today.setUTCHours(0, 0, 0, 0);
+                console.log("Today's date (UTC):", today.toISOString()); // Debugging line
     
                 // Calculate remaining days
                 const remainingDays = Math.ceil((nearestTestDate - today) / (1000 * 60 * 60 * 24));
+                console.log("Remaining days:", remainingDays); // Debugging line
     
                 // Only show if days are positive
                 daysToExam = remainingDays >= 0 ? remainingDays : 'N/A';
@@ -130,6 +127,9 @@ class StudentDashboard {
         }
     }
     
+    
+    
+    
 
     async loadRecentScores() {
         if (!this.student) {
@@ -138,13 +138,7 @@ class StudentDashboard {
         }
 
         try {
-            const response = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${this.student.studentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${this.student.studentId}`);
             if (!response.ok) throw new Error('Lỗi khi tải điểm số');
 
             const scores = await response.json();
@@ -176,13 +170,7 @@ class StudentDashboard {
 
     async loadUpcomingExams() {
         try {
-            const response = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch(`https://localhost:7231/DashboardStudents/GetFutureTestsOfAStudent?id=${this.student.studentId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch upcoming exams');
             }
@@ -213,6 +201,36 @@ class StudentDashboard {
             console.error('Lỗi khi tải kỳ thi sắp tới:', error);
         }
     }
+
+   /* async loadSubjectProgress() {
+        try {
+            const response = await fetch(`/api/student/${this.student.studentId}/progress`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch subject progress');
+            }
+            const progress = await response.json();
+            
+            const progressGrid = document.getElementById('subjectProgress');
+            if (!progressGrid) return;
+
+            progressGrid.innerHTML = progress.map(subject => `
+                <div class="progress-item">
+                    <div class="subject-info">
+                        <h4>${subject.subject}</h4>
+                        <span class="progress-text">${subject.completed}/${subject.total} cột điểm</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${subject.percentage}%"></div>
+                    </div>
+                    <div class="subject-average">
+                        TB: <span class="${subject.average >= 5 ? 'pass' : 'fail'}">${subject.average}</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Lỗi khi tải tiến độ môn học:', error);
+        }
+    }*/
 
     getScoreRating(score) {
         if (score >= 8.5) return 'Giỏi';

@@ -218,4 +218,28 @@ class DataService {
             return [];
         }
     }
+
+    // Lấy thông tin về các môn học mà giáo viên dạy
+    async getTeacherSubjects(teacherId) {
+        try {
+            console.log(`Gọi API lấy môn học với teacherId: ${teacherId}`);
+            // Đảm bảo URL đúng - kiểm tra endpoint API
+            const url = `https://localhost:7231/DashboardTeachers/GetSubjectByTeacherId?id=${teacherId}`;
+            console.log('URL API:', url);
+            
+            const response = await fetch(url);
+            console.log('API response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Dữ liệu trả về từ API:', data);
+            return data;
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin môn học của giáo viên:', error);
+            return [];
+        }
+    }
 }

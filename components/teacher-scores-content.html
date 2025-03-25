@@ -3,11 +3,42 @@
         <button class="btn btn-primary" onclick="window.TeacherScores.openAddScoreModal()">
             <i class="fas fa-plus"></i> Thêm điểm
         </button>
-        <select id="classFilter">
-            <option value="">Chọn lớp học</option>
+        <div class="filter-section">
+            <div class="filter-item">
+                <label for="classFilter">Lớp học</label>
+                <select id="classFilter" class="filter-select">
+                    <option value="">Tất cả lớp</option>
+                </select>
+            </div>
             
-            <!-- Các lớp sẽ được thêm bằng JavaScript -->
-        </select>
+            <div class="filter-item">
+                <label for="subjectFilter">Môn học</label>
+                <select id="subjectFilter" class="filter-select">
+                    <option value="">Tất cả môn</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label for="studentSearch">Tìm kiếm học sinh</label>
+                <input type="text" id="studentSearch" class="filter-select" placeholder="Nhập tên học sinh...">
+            </div>
+            <div class="filter-item">
+                <label for="testTypeFilter">Loại điểm</label>
+                <select id="testTypeFilter" class="filter-select">
+                    <option value="">Tất cả loại điểm</option>
+                    <option value="Final">Cuối kì</option>
+                    <option value="MidTerm">Giữa kì</option>
+                    <option value="Component Score">Miệng</option>
+                </select>
+            </div>
+            
+            <div class="filter-item">
+                <label>&nbsp;</label>
+                <button id="addScoreBtn" class="btn-add">
+                    <i class="fas fa-plus"></i> Thêm điểm mới
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="card">

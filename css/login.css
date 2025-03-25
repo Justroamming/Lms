@@ -79,10 +79,6 @@ body::before {
     animation: glowAnimation 5s infinite ease-in-out;
 }
 
-.login-box:hover {
-    transform: perspective(1000px) rotateY(2deg);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-}
 
 /* Hiệu ứng đường viền cho form */
 .login-box::before {
@@ -92,7 +88,29 @@ body::before {
     left: 0;
     width: 6px;
     height: 100%;
-    background: linear-gradient(to bottom, var(--primary-color), var(--primary-light));
+    background: linear-gradient(
+        to bottom,
+        var(--primary-color),
+        var(--primary-light),
+        #ff00de,
+        #ff66e5,
+        #00ff88,
+        #66ffb5,
+        #00a1ff,
+        #66c7ff,
+        var(--primary-color)
+    );
+    background-size: 100% 800%;
+    animation: smoothColorChange 10s infinite linear;
+}
+
+@keyframes smoothColorChange {
+    0% {
+        background-position: 0% 0%;
+    }
+    100% {
+        background-position: 0% 100%;
+    }
 }
 
 .login-header {
@@ -108,7 +126,34 @@ body::before {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     animation: titleBounce 0.8s ease-out;
 }
+.Backhome {
+    background: linear-gradient(90deg, #6C5CE7, #8A7EEA);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    transition: all 0.3s ease;
+    display: block;
+    margin: 5px auto 15px;
+    text-align: center;
+    position: center;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+    width: fit-content;
+}
 
+.Backhome:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 20px rgba(108, 92, 231, 0.45);
+}
+
+.Backhome:active {
+    transform: translateY(1px);
+}
 .login-header p {
     color: var(--light-text-color);
     font-size: 19px;
@@ -254,7 +299,7 @@ body::before {
     font-size: 14px;
 }
 
-/* Login Button với hiệu ứng */
+/* Login Button với hiệu ứng mới */
 button[type="submit"] {
     width: 100%;
     padding: 14px;
@@ -299,6 +344,29 @@ button[type="submit"]:hover {
 
 button[type="submit"]:active {
     transform: translateY(1px);
+}
+
+button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 10px;
+    background: linear-gradient(
+        45deg,
+        #ff00de,
+        #6C5CE7,
+        #00ff88,
+        #6C5CE7,
+        #ff00de
+    );
+    background-size: 300% 100%;
+    z-index: -1;
+    animation: gradientMove 12s linear infinite;
+    filter: blur(8px);
+    opacity: 0.7;
 }
 
 @keyframes gradientMove {
@@ -373,115 +441,66 @@ select option {
 
 /* Notification Messages - Kiểu Popup */
 .notification {
-    position: fixed !important;
-    top: 20px !important;
-    left: 50% !important;
-    transform: translateX(-50%) translateY(-100px) !important;
-    padding: 15px 20px !important;
-    border-radius: 12px !important;
-    color: white !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 90% !important;
-    max-width: 400px !important;
-    opacity: 0 !important;
-    z-index: 999999 !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
-    transition: none !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    pointer-events: all !important;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 400px;
+    opacity: 0;
+    z-index: 1000;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
 .notification.show {
-    transform: translateX(-50%) translateY(0) !important;
-    opacity: 1 !important;
-    animation: notificationSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
-}
-
-@keyframes notificationSlideIn {
-    0% {
-        transform: translateX(-50%) translateY(-100px);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-}
-
-.notification.hide {
-    animation: notificationSlideOut 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
-}
-
-@keyframes notificationSlideOut {
-    0% {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(-50%) translateY(-100px);
-        opacity: 0;
-    }
+    animation: slideInDown 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
 }
 
 .error-message {
-    background-color: rgba(239, 68, 68, 0.9) !important;
-    border-left: 5px solid #ef4444 !important;
+    background-color: #ef4444;
 }
 
 .success-message {
-    background-color: rgba(34, 197, 94, 0.9) !important;
-    border-left: 5px solid #22c55e !important;
+    background-color: #22c55e;
 }
 
 .notification i:first-child {
-    margin-right: 12px !important;
-    font-size: 20px !important;
-    animation: pulseIcon 1.5s infinite ease-in-out !important;
-}
-
-@keyframes pulseIcon {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.2);
-    }
+    margin-right: 12px;
+    font-size: 18px;
 }
 
 .notification span {
-    flex: 1 !important;
-    font-weight: 500 !important;
-    font-size: 15px !important;
+    flex: 1;
+    font-weight: 500;
 }
 
 .close-btn {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: none !important;
-    color: white !important;
-    cursor: pointer !important;
-    width: 25px !important;
-    height: 25px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    opacity: 0.8 !important;
-    transition: all 0.2s ease !important;
-    border-radius: 50% !important;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
 }
 
 .close-btn:hover {
-    opacity: 1 !important;
-    transform: rotate(90deg) !important;
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    opacity: 1;
 }
 
 /* Fix the form height to avoid jarring transitions */
 #loginForm {
-    min-height: 310px;
+    min-height: 340px;
 }
 
 /* Responsive */
@@ -496,140 +515,6 @@ select option {
 
     .login-header h2 {
         font-size: 24px;
-    }
-}
-
-/* CSS tối giản cho thiết bị di động */
-@media (max-width: 768px) {
-    /* Tối ưu hóa background để tránh giật */
-    body {
-        background: #270867;  /* Màu tĩnh thay vì gradient */
-        animation: none !important;  /* Tắt animation nền */
-    }
-    
-    /* Ẩn các hiệu ứng trang trí phức tạp */
-    .particle, 
-    .glow-line, 
-    .floating-shape, 
-    .star, 
-    .decorative-shape,
-    .education-icon,
-    .login-container::before,
-    .login-box::after,
-    body::after,
-    body::before {
-        display: none !important;
-    }
-    
-    /* Loại bỏ hiệu ứng 3D và animation cho login box */
-    .login-box {
-        transform: none !important;
-        transition: none !important;
-        animation: none !important;
-        backface-visibility: visible !important;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .login-box:hover {
-        transform: none !important;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    /* Tối ưu hóa hiệu ứng nút */
-    button[type="submit"] {
-        background: var(--primary-color) !important;
-        animation: none !important;
-    }
-    
-    button[type="submit"]:hover {
-        transform: none !important;
-        box-shadow: none !important;
-        animation: none !important;
-    }
-    
-    button[type="submit"] i {
-        animation: none !important;
-    }
-    
-    /* Tối ưu popup thông báo */
-    .notification {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
-    
-    /* Đơn giản hóa animation popup thông báo */
-    @keyframes notificationSlideIn {
-        0% {
-            transform: translateX(-50%) translateY(-50px);
-            opacity: 0;
-        }
-        100% {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes notificationSlideOut {
-        0% {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        100% {
-            transform: translateX(-50%) translateY(-50px);
-            opacity: 0;
-        }
-    }
-    
-    .notification i:first-child {
-        animation: none !important;
-    }
-    
-    /* Tối ưu focus input */
-    .form-group input:focus,
-    .form-group select:focus {
-        transform: none !important;
-        box-shadow: 0 0 0 2px var(--primary-color) !important;
-    }
-    
-    /* Đảm bảo loading không gây giật */
-    .spinner {
-        animation: simpleSpin 1s linear infinite !important;
-    }
-    
-    @keyframes simpleSpin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-}
-
-/* Tối ưu hiệu suất cho điện thoại cấu hình thấp */
-@media (max-width: 480px) {
-    /* Loại bỏ hoàn toàn các hiệu ứng không cần thiết */
-    .background-decorations {
-        display: none !important;
-    }
-    
-    /* Đơn giản hóa hơn nữa */
-    .login-box::before {
-        width: 4px !important; /* Giảm kích thước viền */
-    }
-    
-    /* Giảm độ phức tạp của shadow */
-    .login-box {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    }
-    
-    /* Giảm padding để tối ưu không gian */
-    .form-group {
-        margin-bottom: 18px !important;
-    }
-    
-    /* Tắt hoàn toàn animations nếu thiết bị yếu */
-    @media (prefers-reduced-motion) {
-        *, *::before, *::after {
-            animation: none !important;
-            transition: none !important;
-        }
     }
 }
 

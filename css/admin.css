@@ -10,9 +10,11 @@
 
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, #0ae1bd, #8c00ff);
+    background: linear-gradient(145deg, #3a0ca3, #4361ee, #4cc9f0);
+    background-size: 200% 200%;
+    animation: gradientWave 15s ease infinite;
     color: white;
-    padding: 1.25rem 1rem;
+    padding: 0;
     flex-shrink: 0; /* Prevent shrinking */
     height: 100vh; /* Make sidebar full height */
     position: fixed; /* Fix position to left */
@@ -20,42 +22,185 @@
     top: 0;
     bottom: 0;
     overflow-y: auto; /* Allow scrolling if needed */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 100;
 }
 
+@keyframes gradientWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 100px),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 100px);
+    z-index: -1;
+}
+
+/* Scrollbar styling */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.logo {
+    padding: 1.5rem 1.5rem;
+    position: relative;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1rem;
+}
 
 .logo h2 {
     margin: 0;
-    padding: 0.75rem 0;
+    padding: 0;
     text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
     color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    position: relative;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.logo h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+}
+
+.logo h2 i {
+    margin-right: 10px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .sidebar ul {
     list-style: none;
-    padding: 0;
-    margin: 1.25rem 0;
+    padding: 0 1rem;
+    margin: 1.5rem 0;
 }
 
 .sidebar li {
-    padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
+    padding: 0;
+    margin: 0.25rem 0;
     cursor: pointer;
-    border-radius: 0.375rem;
+    border-radius: 10px;
     transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar li::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent);
+    transition: all 0.4s ease;
+    z-index: 0;
+}
+
+.sidebar li:hover::before {
+    left: 0;
 }
 
 .sidebar li:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
 }
 
 .sidebar li.active {
-    background: #3949ab;
+    background: rgba(255, 255, 255, 0.2);
+    border-left: 4px solid #ffffff;
+    font-weight: 600;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateX(5px);
+}
+
+.sidebar li.active::after {
+    content: '';
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background-color: #ffffff;
+    border-radius: 50%;
 }
 
 .sidebar li i {
-    margin-right: 0.5rem;
+    margin-right: 0.8rem;
     width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.sidebar li {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1.2rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar li:hover i {
+    transform: scale(1.2);
+    color: white;
+}
+
+.sidebar li.active i {
+    color: white;
 }
 
 
@@ -182,7 +327,7 @@ th {
     background: #0d00ff;
 }
 
-.btn-edit, .btn-delete {
+.btn-edit, .btn-delete, .btn-print {
     padding: 0.25rem 0.5rem;
     border: none;
     border-radius: 0.25rem;
@@ -203,6 +348,16 @@ th {
 }
 .btn-delete:hover {
     background: #b91c1c;
+}
+
+.btn-print {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: white;
+}
+.btn-print:hover {
+    background: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 5px rgba(0,0,0,0.1);
 }
 
 /* Search Box Styles */
@@ -470,6 +625,41 @@ th {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.stat-card:nth-child(1) {
+    border-bottom-color: #10b981;
+}
+
+.stat-card:nth-child(2) {
+    border-bottom-color: #f59e0b;
+}
+
+.stat-card:nth-child(3) {
+    border-bottom-color: #3b82f6;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+    opacity: 0.5;
 }
 
 .stat-card h4 {
@@ -483,6 +673,11 @@ th {
     font-weight: 700;
     color: #111827;
     margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.05);
+    background: linear-gradient(90deg, #111827, #374151);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-card .trend {
@@ -519,6 +714,24 @@ th {
     border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     overflow: hidden;
+    transition: all 0.3s ease;
+    border-top: 3px solid transparent;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-card:nth-child(1) {
+    border-top-color: #3b82f6;
+}
+
+.dashboard-card:nth-child(2) {
+    border-top-color: #ef4444;
+}
+
+.dashboard-card:nth-child(3) {
+    border-top-color: #10b981;
 }
 
 .dashboard-card .card-header {
@@ -566,6 +779,9 @@ th {
     align-items: center;
     justify-content: center;
     color: white;
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .activity-icon.add {
@@ -580,29 +796,246 @@ th {
     background: #ef4444;
 }
 
+.activity-icon::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    background: inherit;
+    z-index: -1;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    transform: scale(0.8);
+    opacity: 0;
+}
+
+.activity-item:hover .activity-icon {
+    transform: scale(1.1);
+}
+
+.activity-item:hover .activity-icon::after {
+    transform: scale(1.4);
+    opacity: 0.3;
+}
+
 /* Quick Stats */
 .quick-stats {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .quick-stat-item {
     display: flex;
-    justify-content: space-between;
-    padding: 0.75rem;
+    align-items: center;
+    padding: 1rem;
     background: #f9fafb;
-    border-radius: 0.375rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+    position: relative;
+}
+
+.quick-stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    background: #ffffff;
+}
+
+.quick-stat-item.animated::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #4B91F1, #3b82f6, #4cc9f0);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.quick-stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: floatAnimation 3s ease-in-out infinite;
+}
+
+.quick-stat-item:nth-child(2) .quick-stat-icon {
+    animation-delay: 0.5s;
+}
+
+.quick-stat-item:nth-child(3) .quick-stat-icon {
+    animation-delay: 1s;
+}
+
+.quick-stat-item:hover .quick-stat-icon::after {
+    opacity: 1;
+}
+
+.gender-icon {
+    background: linear-gradient(135deg, #3b82f6, #2dd4bf);
+    animation: pulse 2s infinite;
+}
+
+.largest-icon {
+    background: linear-gradient(135deg, #f97316, #facc15);
+}
+
+.smallest-icon {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.quick-stat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .quick-stat-item .label {
-    font-weight: 500;
-    color: #4b5563;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
 }
 
 .quick-stat-item .value {
-    font-weight: 600;
+    font-weight: 700;
     color: #1f2937;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.value-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-container {
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar .progress {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #2dd4bf);
+    border-radius: 10px;
+    transition: width 1s ease;
+}
+
+.gender-bar {
+    display: flex;
+    height: 8px;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-male, .progress-female, .progress {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-male::after, .progress-female::after, .progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        left: 100%;
+    }
+}
+
+.progress-male {
+    height: 100%;
+    background: #3b82f6;
+    transition: width 1s ease;
+    width: 55%;
+}
+
+.progress-female {
+    height: 100%;
+    background: #ec4899;
+    transition: width 1s ease;
+    width: 45%;
+}
+
+.largest-bar .progress {
+    background: linear-gradient(90deg, #f97316, #facc15);
+}
+
+.smallest-bar .progress {
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+}
+
+/* Responsive adjustments for quick-stats */
+@media (max-width: 768px) {
+    .quick-stat-item {
+        padding: 0.75rem;
+    }
+    
+    .quick-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .quick-stat-item .value {
+        font-size: 1rem;
+    }
 }
 
 /* Chart Container */
@@ -723,22 +1156,48 @@ canvas#studentDistributionChart {
     
     .sidebar {
         position: fixed;
-        left: -250px;
+        left: -290px; /* Start off-screen */
         top: 0;
         height: 100%;
         z-index: 1000;
         transition: left 0.3s ease;
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        width: 280px; /* Ensure width is set */
     }
     
     .sidebar.open {
-        left: 0;
+        left: 0; /* Move on-screen when open class is added */
     }
     
     .main-content {
         width: 100%;
         margin-left: 0;
         padding: 0.5rem;
+    }
+    
+    /* Show menu toggle on mobile */
+    .menu-toggle {
+        display: flex !important; /* Force display */
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+    
+    /* Overlay for sidebar */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
     }
     
     /* Điều chỉnh topbar */
@@ -940,12 +1399,108 @@ canvas#studentDistributionChart {
     }
 }
 
+/* Improved menu toggle positioning and appearance */
+@media (max-width: 768px) {
+    .topbar {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: white;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .menu-toggle {
+        position: relative;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #333;
+        font-size: 24px;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 4px;
+        z-index: 1001;
+    }
+    
+    .menu-toggle:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+    
+    /* Ensure sidebar has proper z-index */
+    .sidebar {
+        z-index: 1001;  /* Higher than overlay */
+        width: 250px;   /* Slightly smaller to ensure it fits */
+    }
+    
+    .overlay {
+        z-index: 1000; /* Lower than sidebar but higher than content */
+    }
+    
+    /* Ensure sidebar slides properly */
+    .sidebar.open {
+        left: 0;
+        box-shadow: 3px 0 15px rgba(0,0,0,0.2);
+    }
+}
+
+/* Fix for mobile scrolling issues */
+@media (max-width: 768px) {
+    body, html {
+        overflow-x: hidden;
+        height: 100%;
+        position: relative;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dashboard {
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: visible;
+        position: relative;
+    }
+
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 0.5rem;
+        overflow-y: visible;
+        overflow-x: hidden;
+        height: auto;
+        box-sizing: border-box;
+    }
+
+    /* Fix for content height issues */
+    #pageContent {
+        overflow-x: hidden;
+        overflow-y: visible;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Ensure tables don't overflow */
+    .table-container {
+        overflow-x: auto;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Improved popup positioning for mobile */
 .popup-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
@@ -954,6 +1509,9 @@ canvas#studentDistributionChart {
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s;
+    box-sizing: border-box;
+    padding: 1rem;
+    overflow-y: auto;
 }
 
 .popup-container.active {
@@ -966,10 +1524,34 @@ canvas#studentDistributionChart {
     border-radius: 0.5rem;
     padding: 1.25rem;
     width: 400px;
-    max-width: 90%;
+    max-width: 100%;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     text-align: center;
     animation: fadeInUp 0.3s ease-out;
+    margin: auto;
+    position: relative;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+/* Mobile-specific popup adjustments */
+@media (max-width: 768px) {
+    .popup {
+        padding: 1rem;
+        max-width: calc(100% - 2rem);
+        max-height: calc(100vh - 4rem);
+    }
+    
+    .popup-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .popup-btn {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
 }
 
 .popup-icon {
@@ -1096,4 +1678,104 @@ body, html {
     .main-content {
         padding: 0.5rem;
     }
-} 
+}
+
+@keyframes floatAnimation {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* Thêm animation cho tiêu đề card */
+.card-header h3, .dashboard-card .card-header h3 {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.card-header h3::after, .dashboard-card .card-header h3::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, #3b82f6, transparent);
+    transition: width 0.4s ease;
+}
+
+.card:hover .card-header h3::after, 
+.dashboard-card:hover .card-header h3::after {
+    width: 100%;
+}
+
+/* Trang trí thêm cho các phần tử */
+.table th {
+    background: #f8fafc;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.table th::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+.search-box input {
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+.btn-primary {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0));
+    transition: left 0.6s ease;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+/* Trang trí thêm cho quick stats */
+.quick-stat-icon::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.quick-stat-item:hover .quick-stat-icon::after {
+    opacity: 1;
+}

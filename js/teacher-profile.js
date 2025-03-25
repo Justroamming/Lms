@@ -1,6 +1,6 @@
 class TeacherProfile  {
     constructor() {
-        this.token=localStorage.getItem('token');
+       
         this.teacher = JSON.parse(sessionStorage.getItem('currentUser'));
     
         if (!this.teacher) {
@@ -15,6 +15,8 @@ class TeacherProfile  {
 
     async init() {
         await this.loadProfile();
+
+        
     }
 
     async loadProfile() {
@@ -152,7 +154,6 @@ class TeacherProfile  {
             const response = await fetch(`https://localhost:7231/ProfileTeachers/UpdateTeacherPassword?id=${this.teacher.teacherId || ""}&password=${confirmPassword}`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`,
                     'Content-Type': 'application/json'
                 },
             });
@@ -172,6 +173,9 @@ class TeacherProfile  {
 
     async printProfile() {
         try {
+            
+
+
             const printContent = `
                 <div class="print-profile" style="padding: 20px; font-family: Arial, sans-serif;">
                     <h2 style="text-align: center; color: #333;">HỒ SƠ GIÁO VIÊN</h2>
@@ -257,13 +261,7 @@ class TeacherProfile  {
    
 
     async validatePassword(current, newPass, confirm) {
-        const teacherresponse = await fetch(`https://localhost:7231/ProfileTeachers/GetTeacherById?id=${this.teacher.teacherId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        const teacherresponse = await fetch(`https://localhost:7231/ProfileTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
         const teacher = await teacherresponse.json();
         const teacherdata=teacher.data
         if (current !== teacherdata.password) {
@@ -302,6 +300,8 @@ class TeacherProfile  {
         }, 5000);
     }
     
+    
+
     setupModalHandlers() {
         document.body.addEventListener('show.bs.modal', function () {
             document.body.style.overflow = 'auto';
@@ -320,7 +320,7 @@ class TeacherProfile  {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const user = getCurrentUser();
-    if (!user || !checkAuth('Teacher')) {
+    if (!user || user.role !== 'teacher') {
         window.location.href = 'login.html';
     }
     window.navigationInstance = new TeacherNavigation();

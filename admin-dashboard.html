@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Responsive styles for mobile */
+    <!-- <style>
+        //Responsive styles for mobile
         @media (max-width: 768px) {
             .dashboard {
                 flex-direction: column;
@@ -17,7 +17,7 @@
             
             .sidebar {
                 position: fixed;
-                left: -250px;
+                left: -290px;
                 top: 0;
                 height: 100%;
                 z-index: 1000;
@@ -232,14 +232,14 @@
                 font-size: 18px;
             }
         }
-    </style>
+    </style> -->
 </head>
 <body>
     <div class="overlay" id="sidebarOverlay"></div>
     <div class="dashboard">
         <div class="sidebar" id="sidebar">
             <div class="logo">
-                <h2>Admin Dashboard</h2>
+                <h2><i class="fas fa-graduation-cap"></i> Admin LMS</h2>
             </div>
             <ul>
                 <li data-page="dashboard" class="active">
@@ -307,16 +307,13 @@
         </div>
     </div>
 
-    <script src="js/login.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
     <script>
-        // Khởi tạo đối tượng AdminDashboard
-        // const adminDashboard = new AdminDashboard();
-        
         // Kiểm tra quyền admin
         document.addEventListener('DOMContentLoaded', () => {
             const user = getCurrentUser();
-            if (!user || !checkAuth('Admin')) {
+            if (!user || user.role !== 'admin') {
                 window.location.href = 'login.html';
             }
             
@@ -358,12 +355,74 @@
                 }
             });
         });
+
+        // Mobile sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            // Toggle sidebar on menu button click
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('active');
+                });
+            }
+            
+            // Close sidebar when clicking on overlay
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                });
+            }
+            
+            // Close sidebar when clicking menu items (mobile only)
+            const menuItems = document.querySelectorAll('.sidebar li');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // Add this to the existing scripts to fix mobile viewport height issues
+        function setMobileHeight() {
+            // Fix for mobile viewport height
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        // Run on load and resize
+        window.addEventListener('DOMContentLoaded', setMobileHeight);
+        window.addEventListener('resize', setMobileHeight);
         
-        // Hàm đăng xuất
-        // function logout() {
-        //     clearCurrentUser();
-        //     window.location.href = 'login.html';
-        // }
+        // Ensure proper scrolling after sidebar actions
+        document.addEventListener('click', function(e) {
+            // If clicking mobile menu toggle or overlay
+            if (e.target.id === 'menuToggle' || 
+                e.target.closest('#menuToggle') || 
+                e.target.id === 'sidebarOverlay') {
+                
+                // Short delay to ensure transition completes
+                setTimeout(function() {
+                    window.scrollTo(0, window.scrollY);
+                }, 350);
+            }
+        });
     </script>
 </body>
-</html> 
+</html>
