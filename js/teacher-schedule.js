@@ -1,5 +1,6 @@
 class TeacherSchedule {
     constructor() {
+        this.token=localStorage.getItem('token');
         // Giả sử thông tin giáo viên hiện tại được lưu trong sessionStorage dưới dạng chuỗi JSON.
         this.teacher = JSON.parse(sessionStorage.getItem('currentUser'));
         // Cấu hình lịch: chỉnh startHour/endHour theo nhu cầu.
@@ -172,7 +173,13 @@ class TeacherSchedule {
       // Load schedule của giáo viên từ API.
       async loadSchedule() {
         try {
-          const response = await fetch(`https://scoreapi-1zqy.onrender.com/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`);
+          const response = await fetch(`https://localhost:7231/ScheduleTeachers/GetOneTeacherSchedule?id=${this.teacher.teacherId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }

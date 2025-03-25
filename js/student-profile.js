@@ -1,6 +1,7 @@
 class StudentProfile extends BaseComponent {
     constructor() {
         super();
+        this.token=localStorage.getItem('token');
         this.student = JSON.parse(sessionStorage.getItem('currentUser'));
     
         if (!this.student) {
@@ -22,7 +23,13 @@ class StudentProfile extends BaseComponent {
     async loadProfile() {
         try {
            
-            const cohortResponse = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileStudents/GetCohortById?id=${this.student.cohortId}`);
+            const cohortResponse = await fetch(`https://localhost:7231/ProfileStudents/GetCohortById?id=${this.student.cohortId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             const cohort= await cohortResponse.json();
             const cohortData = cohort.data;
 
@@ -141,7 +148,13 @@ class StudentProfile extends BaseComponent {
 
     async loadAcademicInfo() {
         try {
-             const response = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`);
+             const response = await fetch(`https://localhost:7231/ProfileStudents/GetStudentOverallAverageScore?id=${this.student.studentId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             if (!response.ok) throw new Error('Lỗi khi tải thống kê');
     
             const statsArray = await response.json();
@@ -201,9 +214,10 @@ class StudentProfile extends BaseComponent {
         }
     
         try {
-            const response = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileStudents/UpdateStudentPassword?id=${this.student.studentId || ""}&password=${confirmPassword}`, {
+            const response = await fetch(`https://localhost:7231/ProfileStudents/UpdateStudentPassword?id=${this.student.studentId || ""}&password=${confirmPassword}`, {
                 method: 'PUT',
                 headers: {
+                    'Authorization': `Bearer ${this.token}`,
                     'Content-Type': 'application/json'
                 },
             });
@@ -223,7 +237,13 @@ class StudentProfile extends BaseComponent {
 
     async printProfile() {
         try {
-            const cohortResponse = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileStudents/GetCohortById?id=${this.student.cohortId}`);
+            const cohortResponse = await fetch(`https://localhost:7231/ProfileStudents/GetCohortById?id=${this.student.cohortId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             const cohort= await cohortResponse.json();
             const cohortData = cohort.data;
 
@@ -343,7 +363,13 @@ class StudentProfile extends BaseComponent {
     }
 
     async validatePassword(current, newPass, confirm) {
-        const studentresponse = await fetch(`https://scoreapi-1zqy.onrender.com/ProfileStudents/GetStudentById?id=${this.student.studentId}`);
+        const studentresponse = await fetch(`https://localhost:7231/ProfileStudents/GetStudentById?id=${this.student.studentId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
         const student = await studentresponse.json();
         const studentdata=student.data
         if (current !== studentdata.password) {
@@ -402,7 +428,7 @@ class StudentProfile extends BaseComponent {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const user = getCurrentUser();
-    if (!user || user.role !== 'student') {
+    if (!user || !checkAuth('Student')) {
         window.location.href = 'login.html';
     }
     window.navigationInstance = new Navigation();

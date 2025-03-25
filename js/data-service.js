@@ -8,15 +8,15 @@ class DataService {
     async fetchDashboardData() {
         try {
             // Fetch teacher data from API
-            const teacherResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
+            const teacherResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherById?id=${this.teacher.teacherId}`);
             const teacher = await teacherResponse.json();
             const teacherData = teacher.data;
 
             // Fetch students and scores data from API
-            const studentsResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherStudentsInfo?id=${this.teacher.teacherId}`);
+            const studentsResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherStudentsInfo?id=${this.teacher.teacherId}`);
             const students = await studentsResponse.json();
 
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetTeacherGradesStudentsScore?id=${this.teacher.teacherId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardTeachers/GetTeacherGradesStudentsScore?id=${this.teacher.teacherId}`);
             const scores = await scoresResponse.json();
 
             // Tính toán thống kê
@@ -113,7 +113,7 @@ class DataService {
 
     async getStudentData(studentId) {
         try {
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
             const studentScores = await scoresResponse.json();
             
             return {
@@ -136,7 +136,7 @@ class DataService {
 
     async getStudentStats(studentId) {
         try {
-            const scoresResponse = await fetch(`https://scoreapi-1zqy.onrender.com/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
+            const scoresResponse = await fetch(`https://localhost:7231/DashboardStudents/GetAllGradesOfAStudent?id=${studentId}`);
             const studentScores = await scoresResponse.json();
             
             // Tính điểm trung bình
@@ -215,30 +215,6 @@ class DataService {
             }));
         } catch (error) {
             console.error('Lỗi khi lấy tiến độ môn học:', error);
-            return [];
-        }
-    }
-
-    // Lấy thông tin về các môn học mà giáo viên dạy
-    async getTeacherSubjects(teacherId) {
-        try {
-            console.log(`Gọi API lấy môn học với teacherId: ${teacherId}`);
-            // Đảm bảo URL đúng - kiểm tra endpoint API
-            const url = `https://scoreapi-1zqy.onrender.com/DashboardTeachers/GetSubjectByTeacherId?id=${teacherId}`;
-            console.log('URL API:', url);
-            
-            const response = await fetch(url);
-            console.log('API response status:', response.status);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log('Dữ liệu trả về từ API:', data);
-            return data;
-        } catch (error) {
-            console.error('Lỗi khi lấy thông tin môn học của giáo viên:', error);
             return [];
         }
     }
